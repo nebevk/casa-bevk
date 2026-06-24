@@ -3,6 +3,7 @@ import { getProfile, requireUser } from "@/lib/auth/dal";
 import { AppSidebar } from "@/components/app-shell/app-sidebar";
 import { TopBar } from "@/components/app-shell/top-bar";
 import { RealtimeProvider } from "@/components/providers/realtime-provider";
+import { QuickAddNote } from "@/components/notes/quick-add-note";
 
 export default async function AppLayout({
   children,
@@ -25,6 +26,7 @@ export default async function AppLayout({
           </main>
         </div>
       </div>
+      <QuickAddNote />
     </RealtimeProvider>
   );
 }

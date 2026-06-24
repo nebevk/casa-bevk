@@ -1,15 +1,10 @@
 import type { Metadata } from "next";
-import { StickyNote } from "lucide-react";
-import { PagePlaceholder } from "@/components/page-placeholder";
+import { getNotes } from "@/lib/notes/queries";
+import { NotesView } from "@/components/notes/notes-view";
 
 export const metadata: Metadata = { title: "Notes" };
 
-export default function NotesPage() {
-  return (
-    <PagePlaceholder
-      title="Notes"
-      description="Personal and shared notes — kept private or written together."
-      icon={StickyNote}
-    />
-  );
+export default async function NotesPage() {
+  const notes = await getNotes();
+  return <NotesView notes={notes} />;
 }
