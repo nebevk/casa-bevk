@@ -1,15 +1,20 @@
 import type { Metadata } from "next";
-import { Boxes } from "lucide-react";
-import { PagePlaceholder } from "@/components/page-placeholder";
+import {
+  getAssets,
+  getMaintenanceEntries,
+  getProviders,
+} from "@/lib/records/queries";
+import { RecordsView } from "@/components/records/records-view";
 
 export const metadata: Metadata = { title: "Records" };
 
-export default function RecordsPage() {
+export default async function RecordsPage() {
+  const [assets, entries, providers] = await Promise.all([
+    getAssets(),
+    getMaintenanceEntries(),
+    getProviders(),
+  ]);
   return (
-    <PagePlaceholder
-      title="Records"
-      description="Cars, the apartment, and providers — info, maintenance logs, and costs in one place."
-      icon={Boxes}
-    />
+    <RecordsView assets={assets} entries={entries} providers={providers} />
   );
 }

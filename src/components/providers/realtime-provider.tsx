@@ -14,6 +14,8 @@ const REALTIME_TABLES = [
   "expenses",
   "recurring_payments",
   "maintenance_log",
+  "assets",
+  "providers",
 ];
 
 /**
