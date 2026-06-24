@@ -1,57 +1,6 @@
-/** Casa Bevk brand mark: an outline house with a climbing vine and a pineapple inside. */
-export function BrandSvg({
-  size = 512,
-  rounded = true,
-  className,
-}: {
-  size?: number;
-  rounded?: boolean;
-  className?: string;
-}) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 512 512"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      role="img"
-      aria-label="Casa Bevk"
-    >
-      <rect width="512" height="512" rx={rounded ? 112 : 0} fill="#6B8E6B" />
+import { cn } from "@/lib/utils";
 
-      {/* house outline */}
-      <path
-        d="M150 386 L150 250 L256 154 L362 250 L362 386 Z"
-        fill="none"
-        stroke="#F7F5F0"
-        strokeWidth={14}
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
-
-      {/* vine climbing the left wall and over the roof */}
-      <path
-        d="M150 386 C 116 348 130 300 152 252 C 162 232 184 214 210 206"
-        fill="none"
-        stroke="#F7F5F0"
-        strokeWidth={7}
-        strokeLinecap="round"
-      />
-      <ellipse cx="120" cy="336" rx="9" ry="16" fill="#F7F5F0" />
-      <ellipse cx="124" cy="288" rx="9" ry="16" fill="#F7F5F0" />
-      <ellipse cx="150" cy="232" rx="9" ry="16" fill="#F7F5F0" />
-      <ellipse cx="192" cy="210" rx="9" ry="16" fill="#F7F5F0" />
-
-      {/* pineapple inside */}
-      <ellipse cx="262" cy="332" rx="30" ry="36" fill="#E8B45A" />
-      <path d="M262 276 L249 314 L275 314 Z" fill="#5E7A52" />
-      <path d="M236 288 L259 316 L267 306 Z" fill="#5E7A52" />
-      <path d="M288 288 L265 316 L257 306 Z" fill="#5E7A52" />
-    </svg>
-  );
-}
-
+/** Casa Bevk brand mark: the logo centered on the sage square. */
 export function Logo({
   size = 32,
   className,
@@ -59,5 +8,23 @@ export function Logo({
   size?: number;
   className?: string;
 }) {
-  return <BrandSvg size={size} className={className} />;
+  const inner = Math.round(size * 0.9);
+  return (
+    <span
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center overflow-hidden bg-primary",
+        className,
+      )}
+      style={{ width: size, height: size }}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/casabevk_logo.png"
+        alt="Casa Bevk"
+        width={inner}
+        height={inner}
+        style={{ objectFit: "contain" }}
+      />
+    </span>
+  );
 }

@@ -29,7 +29,8 @@ export const metadata: Metadata = {
     title: APP_NAME,
   },
   icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    icon: [{ url: "/app-icon?size=64", type: "image/png", sizes: "64x64" }],
+    apple: [{ url: "/app-icon?size=180", type: "image/png", sizes: "180x180" }],
   },
 };
 
