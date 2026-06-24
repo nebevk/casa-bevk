@@ -12,11 +12,12 @@ sign-up is disabled and exactly two accounts are pre-provisioned.
 
 ## 2. Apply the schema
 
-> **Pending migrations** (apply in order via Cursor's Supabase MCP, then run
-> `pnpm db:types`): `0002_notes_category.sql` (note categories) and
-> `0003_member_budgets.sql` (per-person budgets). Both are idempotent and additive.
+The schema + RLS are the source of truth in `supabase/migrations/`. Applied on
+the remote project through `0003_member_budgets` (includes `notes.category` and
+`budgets.member_id`). Regenerate types after new migrations: `pnpm db:types`
+(or Supabase MCP `generate_typescript_types` if the CLI is not linked).
 
-The schema + RLS are the source of truth in `supabase/migrations/`. Two ways:
+Two ways to apply **new** migrations:
 
 ### A. Cursor + Supabase MCP (preferred)
 

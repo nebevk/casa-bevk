@@ -19,12 +19,16 @@ Then in Vercel: **Add New → Project → Import** the repo. Framework = Next.js
 
 **B. Vercel CLI (deploy straight from this folder)**
 ```bash
-npx vercel        # link/create the project (preview deploy)
-npx vercel --prod # production deploy
+pnpm deploy:vercel   # reads .env.local, sets prod env vars, deploys
+# or manually:
+npx vercel link --yes --scope kvebens-projects
+npx vercel deploy --prod --yes
 ```
 
 (You can also drive this from Cursor with the Vercel MCP you added to
 `.cursor/mcp.json`.)
+
+**Live production:** https://casa-bevk.vercel.app
 
 ## 2. Environment variables (Vercel → Project → Settings → Environment Variables)
 

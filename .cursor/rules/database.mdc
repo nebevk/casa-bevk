@@ -13,18 +13,7 @@ Source of truth: `supabase/migrations/`. Postgres + RLS is the **entire** securi
 model for this private two-user app.
 
 **Remote project:** `casa-bevk` — ref `bqahklmyziowboicwwjj` (eu-central-1). Schema
-applied via Supabase MCP; types in `src/lib/supabase/database.types.ts`.
-
-## ⚠ Pending migrations — apply these in order, then `pnpm db:types`
-
-- `supabase/migrations/0002_notes_category.sql` — adds `notes.category`
-  (Notes organizing/filtering).
-- `supabase/migrations/0003_member_budgets.sql` — adds `budgets.member_id` +
-  a member-aware unique index for **per-person budgets** (Nejc / Eva). Shared
-  budgets already work; personal budgets only persist once this is applied.
-
-Apply each via the Supabase MCP `apply_migration` (in number order), then
-regenerate types with `pnpm db:types`. Both are idempotent and additive.
+applied through `0003_member_budgets`; types in `src/lib/supabase/database.types.ts`.
 
 ## Applying migrations (Supabase MCP)
 

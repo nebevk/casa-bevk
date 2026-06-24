@@ -3,7 +3,7 @@
 # and re-apply the project_id below. (Applying via the Supabase MCP needs no
 # local config — see docs/SUPABASE.md.)
 
-project_id = "casa-bevk"
+project_id = "bqahklmyziowboicwwjj"
 
 [db]
 port = 54322
