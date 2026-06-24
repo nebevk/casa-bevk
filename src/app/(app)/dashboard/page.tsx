@@ -106,22 +106,24 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <WeatherCard weather={weather} />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <WeatherCard weather={weather} />
 
-      <Card className="border-primary/15 bg-accent/40">
-        <CardContent className="flex items-start gap-3.5 py-5">
-          <Sparkles className="mt-0.5 size-5 shrink-0 text-primary" />
-          <div>
-            <p className="font-heading text-base leading-relaxed text-foreground sm:text-lg">
-              “{verse.text}”
-            </p>
-            <p className="mt-2 text-xs font-medium text-muted-foreground">
-              — {verse.reference}
-              {verse.version ? ` · ${verse.version}` : ""}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+        <Card className="border-primary/15 bg-accent/40">
+          <CardContent className="flex h-full items-start gap-3.5 py-5">
+            <Sparkles className="mt-0.5 size-5 shrink-0 text-primary" />
+            <div>
+              <p className="font-heading text-base leading-relaxed text-foreground sm:text-lg">
+                “{verse.text}”
+              </p>
+              <p className="mt-2 text-xs font-medium text-muted-foreground">
+                — {verse.reference}
+                {verse.version ? ` · ${verse.version}` : ""}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => {
