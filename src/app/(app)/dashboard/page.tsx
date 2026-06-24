@@ -5,12 +5,14 @@ import {
   Leaf,
   ListTodo,
   ShoppingCart,
+  Sparkles,
   StickyNote,
 } from "lucide-react";
 import { getHouseholdMembers, getProfile } from "@/lib/auth/dal";
 import { getTasks } from "@/lib/tasks/queries";
 import { getNotes } from "@/lib/notes/queries";
 import { getShoppingItems } from "@/lib/shopping/queries";
+import { getDailyVerse } from "@/lib/dashboard/verse";
 import {
   Card,
   CardContent,
@@ -29,12 +31,13 @@ function greeting() {
 }
 
 export default async function DashboardPage() {
-  const [tasks, notes, items, members, profile] = await Promise.all([
+  const [tasks, notes, items, members, profile, verse] = await Promise.all([
     getTasks(),
     getNotes(),
     getShoppingItems(),
     getHouseholdMembers(),
     getProfile(),
+    getDailyVerse(),
   ]);
 
   const name = (profile as { display_name?: string } | null)?.display_name;
@@ -70,6 +73,21 @@ export default async function DashboardPage() {
           Here’s your household at a glance.
         </p>
       </div>
+
+      <Card className="border-primary/15 bg-accent/40">
+        <CardContent className="flex items-start gap-3.5 py-5">
+          <Sparkles className="mt-0.5 size-5 shrink-0 text-primary" />
+          <div>
+            <p className="font-heading text-base leading-relaxed text-foreground sm:text-lg">
+              “{verse.text}”
+            </p>
+            <p className="mt-2 text-xs font-medium text-muted-foreground">
+              — {verse.reference}
+              {verse.version ? ` · ${verse.version}` : ""}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => {
