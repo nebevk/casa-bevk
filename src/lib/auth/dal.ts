@@ -53,3 +53,34 @@ export const getHousehold = cache(async () => {
     .maybeSingle();
   return data ?? null;
 });
+
+export type Member = {
+  id: string;
+  role: string;
+  name: string;
+  avatarUrl: string | null;
+};
+
+/** The household's members (the two people), with display info for pickers. */
+export const getHouseholdMembers = cache(async (): Promise<Member[]> => {
+  const user = await getUser();
+  if (!user) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("household_members")
+    .select("user_id, role, profile:profiles(display_name, avatar_url)")
+    .order("role", { ascending: false }); // owner first
+
+  return (data ?? []).map((m) => {
+    const profile = m.profile as {
+      display_name: string | null;
+      avatar_url: string | null;
+    } | null;
+    return {
+      id: m.user_id as string,
+      role: m.role as string,
+      name: profile?.display_name ?? "Member",
+      avatarUrl: profile?.avatar_url ?? null,
+    };
+  });
+});

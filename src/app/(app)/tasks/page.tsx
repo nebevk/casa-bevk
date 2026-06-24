@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
-import { ListTodo } from "lucide-react";
-import { PagePlaceholder } from "@/components/page-placeholder";
+import { getHouseholdMembers, getUser } from "@/lib/auth/dal";
+import { getTasks } from "@/lib/tasks/queries";
+import { TasksView } from "@/components/tasks/tasks-view";
 
 export const metadata: Metadata = { title: "To-Do" };
 
-export default function TasksPage() {
+export default async function TasksPage() {
+  const [tasks, members, user] = await Promise.all([
+    getTasks(),
+    getHouseholdMembers(),
+    getUser(),
+  ]);
+
   return (
-    <PagePlaceholder
-      title="To-Do"
-      description="Shared task lists — assign tasks, set due dates, and check things off together."
-      icon={ListTodo}
-    />
+    <TasksView tasks={tasks} members={members} currentUserId={user?.id ?? null} />
   );
 }
