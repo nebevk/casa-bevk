@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, Fraunces } from "next/font/google";
+import { Plus_Jakarta_Sans, Fraunces, Rochester } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { APP_DESCRIPTION, APP_NAME } from "@/lib/constants";
@@ -12,6 +12,13 @@ const sans = Plus_Jakarta_Sans({
 
 const heading = Fraunces({
   variable: "--font-heading",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const brand = Rochester({
+  weight: "400",
+  variable: "--font-brand",
   subsets: ["latin"],
   display: "swap",
 });
@@ -49,7 +56,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${sans.variable} ${heading.variable} h-full`}
+      className={`${sans.variable} ${heading.variable} ${brand.variable} h-full`}
       suppressHydrationWarning
     >
       <body className="min-h-full bg-background text-foreground antialiased">
