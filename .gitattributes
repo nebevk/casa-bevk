@@ -1,0 +1,19 @@
+# Normalize line endings: LF in the repo, checked out native on each OS
+* text=auto eol=lf
+
+# Windows-only scripts keep CRLF
+*.cmd  text eol=crlf
+*.bat  text eol=crlf
+*.ps1  text eol=crlf
+
+# Binary assets
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.woff  binary
+*.woff2 binary
+
+# Lockfiles: treat as generated (collapse in diffs / PRs)
+pnpm-lock.yaml -diff linguist-generated
