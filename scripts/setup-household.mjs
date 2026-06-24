@@ -10,6 +10,44 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+// Tolerant .env.local loader (Node's --env-file is picky about some values).
+function loadEnvLocal() {
+  const candidates = [
+    join(process.cwd(), ".env.local"),
+    join(dirname(fileURLToPath(import.meta.url)), "..", ".env.local"),
+  ];
+  for (const file of candidates) {
+    let text;
+    try {
+      text = readFileSync(file, "utf8");
+    } catch {
+      continue;
+    }
+    if (text.charCodeAt(0) === 0xfeff) text = text.slice(1); // strip BOM
+    for (const raw of text.split(/\r?\n/)) {
+      const line = raw.trim();
+      if (!line || line.startsWith("#")) continue;
+      const eq = line.indexOf("=");
+      if (eq === -1) continue;
+      const key = line.slice(0, eq).trim();
+      let val = line.slice(eq + 1).trim();
+      if (
+        (val.startsWith('"') && val.endsWith('"')) ||
+        (val.startsWith("'") && val.endsWith("'"))
+      ) {
+        val = val.slice(1, -1);
+      }
+      if (key && process.env[key] === undefined) process.env[key] = val;
+    }
+    return;
+  }
+}
+
+loadEnvLocal();
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -19,6 +57,12 @@ if (!URL || !SERVICE_KEY) {
     "✗ Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local",
   );
   process.exit(1);
+}
+
+// supabase-js eagerly initializes a Realtime client that needs a WebSocket
+// global. Node 20 has none; we never use realtime here, so a stub satisfies it.
+if (typeof globalThis.WebSocket === "undefined") {
+  globalThis.WebSocket = class StubWebSocket {};
 }
 
 const admin = createClient(URL, SERVICE_KEY, {
