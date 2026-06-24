@@ -79,3 +79,8 @@ Agent/contributor conventions (Next 16 gotchas, the `@supabase/ssr`
 getAll/setAll rule, and the household/owner RLS template every new table must
 follow) are in [`AGENTS.md`](./AGENTS.md) and [`.cursor/rules/`](./.cursor/rules/).
 The roadmap is in [`TODO.md`](./TODO.md).
+
+## Deploy & install
+
+Deploy to Vercel and install on your phone — see [`docs/DEPLOY.md`](./docs/DEPLOY.md).
+The app is an installable PWA (standalone, themed icon) via `app/manifest.ts`.
