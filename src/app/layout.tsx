@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Fraunces } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { APP_DESCRIPTION, APP_NAME } from "@/lib/constants";
 
 const sans = Plus_Jakarta_Sans({
   variable: "--font-sans",
@@ -17,11 +18,26 @@ const heading = Fraunces({
 
 export const metadata: Metadata = {
   title: {
-    default: "Casa Bevk",
-    template: "%s · Casa Bevk",
+    default: APP_NAME,
+    template: `%s · ${APP_NAME}`,
   },
-  description:
-    "A private family hub — shared to-do & shopping lists, notes, a family calendar, and household finances, all in one calm place.",
+  description: APP_DESCRIPTION,
+  applicationName: APP_NAME,
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: APP_NAME,
+  },
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#F7F5F0",
+  colorScheme: "light",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

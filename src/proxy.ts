@@ -19,8 +19,10 @@ export const config = {
      * Match all request paths except:
      * - _next/static, _next/image (build assets)
      * - favicon.ico, robots.txt, sitemap.xml
-     * - common static image extensions
+     * - PWA metadata that must stay public: manifest.webmanifest, icon(.svg),
+     *   apple-icon, app-icon
+     * - common static asset extensions
      */
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|apple-icon|app-icon|icon|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|webmanifest)$).*)",
   ],
 };
