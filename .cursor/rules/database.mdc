@@ -10,19 +10,19 @@ alwaysApply: false
 # Casa Bevk — Database
 
 Source of truth: `supabase/migrations/`. Postgres + RLS is the **entire** security
-model for this private two-user app. There is no Supabase project yet — you (the
-Cursor agent with the Supabase MCP) create/apply it.
+model for this private two-user app.
+
+**Remote project:** `casa-bevk` — ref `bqahklmyziowboicwwjj` (eu-central-1). Schema
+applied via Supabase MCP; types in `src/lib/supabase/database.types.ts`.
 
 ## Applying migrations (Supabase MCP)
 
-1. Ensure `.cursor/mcp.json` has the `supabase` server (copy `.cursor/mcp.example.json`)
-   with the project ref + a personal access token. `mcp.json` is gitignored — never
-   commit the token.
-2. Apply `supabase/migrations/0001_initial_schema.sql` (idempotent — safe to re-run),
-   then optionally `supabase/seed.sql` (reference data only; no fake users).
-3. Regenerate types afterward: `pnpm db:types`.
-4. Smoke-test once with `supabase db reset` on a throwaway project — the migration
-   was statically validated, not live-run, when authored.
+1. Ensure `.cursor/mcp.json` has the `supabase` server scoped to `bqahklmyziowboicwwjj`
+   (see `.cursor/mcp.example.json`). OAuth handles auth — no PAT required for local dev.
+2. For **new** schema changes: add `supabase/migrations/0002_*.sql`, apply via MCP
+   `apply_migration`, then `pnpm db:types`.
+3. `supabase/seed.sql` defines `seed_default_expense_categories()` — call after
+   `create_household()` from the app; it does not create fake users.
 
 ## When you change the schema you MUST also
 
@@ -55,7 +55,7 @@ Cursor agent with the Supabase MCP) create/apply it.
 
 - **Identity:** profiles, households, household_members, household_settings, user_settings
 - **Lists:** todo_lists, tasks, shopping_lists, shopping_items
-- **Notes:** notes (personal/shared via `visibility`)
+- **Notes:** notes (personal/shared via `visibility`; free-text `category` added in `0002_notes_category.sql`)
 - **Calendar:** calendar_events, event_reminders (per-user)
 - **Money:** expense_categories, expenses, budgets, recurring_payments
 - **Records:** assets (vehicle/property + jsonb `attributes`), providers
