@@ -16,6 +16,18 @@ export const APP_NAME = "Casa Bevk";
 export const APP_DESCRIPTION =
   "A private family hub — shared lists, notes, a family calendar, and household finances.";
 
+/**
+ * The two household members. Casa Bevk is invite-only (no public sign-up), so
+ * these are the only accounts that exist. Surfaced as quick-login chips so
+ * logging in is one tap + password.
+ */
+export type HouseholdMember = { name: string; email: string };
+
+export const HOUSEHOLD_MEMBERS: HouseholdMember[] = [
+  { name: "Eva", email: "eva.demsar1@gmail.com" },
+  { name: "Nejc", email: "ne.bevk@gmail.com" },
+];
+
 export type NavItem = {
   label: string;
   href: string;
