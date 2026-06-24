@@ -18,6 +18,8 @@ import { getEvents } from "@/lib/calendar/queries";
 import { expandEvents } from "@/lib/calendar/recurrence";
 import { getSubscriptions } from "@/lib/subscriptions/queries";
 import { getDailyVerse } from "@/lib/dashboard/verse";
+import { getWeather } from "@/lib/dashboard/weather";
+import { WeatherCard } from "@/components/dashboard/weather-card";
 import { daysUntil, formatMoney } from "@/lib/format";
 import {
   Card,
@@ -39,17 +41,27 @@ function greeting() {
 }
 
 export default async function DashboardPage() {
-  const [tasks, notes, items, members, profile, verse, events, subscriptions] =
-    await Promise.all([
-      getTasks(),
-      getNotes(),
-      getShoppingItems(),
-      getHouseholdMembers(),
-      getProfile(),
-      getDailyVerse(),
-      getEvents(),
-      getSubscriptions(),
-    ]);
+  const [
+    tasks,
+    notes,
+    items,
+    members,
+    profile,
+    verse,
+    events,
+    subscriptions,
+    weather,
+  ] = await Promise.all([
+    getTasks(),
+    getNotes(),
+    getShoppingItems(),
+    getHouseholdMembers(),
+    getProfile(),
+    getDailyVerse(),
+    getEvents(),
+    getSubscriptions(),
+    getWeather(),
+  ]);
 
   const name = (profile as { display_name?: string } | null)?.display_name;
   const memberName = new Map(members.map((m) => [m.id, m.name] as const));
@@ -93,6 +105,8 @@ export default async function DashboardPage() {
           Here’s your household at a glance.
         </p>
       </div>
+
+      <WeatherCard weather={weather} />
 
       <Card className="border-primary/15 bg-accent/40">
         <CardContent className="flex items-start gap-3.5 py-5">

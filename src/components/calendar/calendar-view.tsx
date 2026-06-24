@@ -13,7 +13,13 @@ const pad = (n: number) => String(n).padStart(2, "0");
 const keyOf = (d: Date) =>
   `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
-export function CalendarView({ events }: { events: CalendarEvent[] }) {
+export function CalendarView({
+  events,
+  holidays,
+}: {
+  events: CalendarEvent[];
+  holidays: Record<string, string>;
+}) {
   const today = new Date();
   const [cursor, setCursor] = useState({
     y: today.getFullYear(),
@@ -158,6 +164,14 @@ export function CalendarView({ events }: { events: CalendarEvent[] }) {
                 >
                   {d.getDate()}
                 </span>
+                {holidays[k] && (
+                  <div
+                    className="mt-0.5 truncate rounded bg-accent/70 px-1 py-0.5 text-[10px] font-medium text-accent-foreground"
+                    title={holidays[k]}
+                  >
+                    {holidays[k]}
+                  </div>
+                )}
                 <div className="mt-1 space-y-1">
                   {dayOcc.slice(0, 3).map((o, j) => (
                     <div
