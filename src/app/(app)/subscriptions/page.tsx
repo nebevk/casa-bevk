@@ -1,15 +1,23 @@
 import type { Metadata } from "next";
-import { Repeat } from "lucide-react";
-import { PagePlaceholder } from "@/components/page-placeholder";
+import { getSubscriptions } from "@/lib/subscriptions/queries";
+import { getProviders } from "@/lib/records/queries";
+import { SubscriptionsView } from "@/components/subscriptions/subscriptions-view";
 
 export const metadata: Metadata = { title: "Subscriptions" };
 
-export default function SubscriptionsPage() {
+export default async function SubscriptionsPage() {
+  const [subscriptions, providers] = await Promise.all([
+    getSubscriptions(),
+    getProviders(),
+  ]);
   return (
-    <PagePlaceholder
-      title="Subscriptions"
-      description="Keep track of recurring payments and when they're due."
-      icon={Repeat}
+    <SubscriptionsView
+      subscriptions={subscriptions}
+      providers={providers.map((p) => ({
+        id: p.id,
+        name: p.name,
+        monthly_cost: p.monthly_cost,
+      }))}
     />
   );
 }
