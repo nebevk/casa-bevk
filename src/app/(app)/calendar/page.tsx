@@ -1,15 +1,10 @@
 import type { Metadata } from "next";
-import { CalendarDays } from "lucide-react";
-import { PagePlaceholder } from "@/components/page-placeholder";
+import { getEvents } from "@/lib/calendar/queries";
+import { CalendarView } from "@/components/calendar/calendar-view";
 
 export const metadata: Metadata = { title: "Calendar" };
 
-export default function CalendarPage() {
-  return (
-    <PagePlaceholder
-      title="Calendar"
-      description="A shared family calendar with events, recurrence, and reminders."
-      icon={CalendarDays}
-    />
-  );
+export default async function CalendarPage() {
+  const events = await getEvents();
+  return <CalendarView events={events} />;
 }
