@@ -55,7 +55,7 @@ export function WeatherCard({ weather }: { weather: Weather }) {
               {weather.current.temp}°
             </p>
             <p className="text-sm text-muted-foreground">
-              {now.label} · Ljubljana
+              {now.label} · Radovljica
             </p>
             <p className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1">

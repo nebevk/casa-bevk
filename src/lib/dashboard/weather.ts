@@ -14,9 +14,9 @@ export type Weather = {
   sunset: string;
 } | null;
 
-// Ljubljana (matches the household timezone).
-const LAT = 46.05;
-const LON = 14.51;
+// Radovljica, Slovenia.
+const LAT = 46.3442;
+const LON = 14.1736;
 
 /** Current conditions + a short forecast from Open-Meteo (free, no key). */
 export async function getWeather(): Promise<Weather> {

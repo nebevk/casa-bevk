@@ -15,7 +15,13 @@ export default async function AuthLayout({
     <main className="flex min-h-svh flex-col items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-3 inline-flex rounded-2xl bg-[#41553c] p-2.5">
+          <div
+            className="mx-auto mb-3 inline-flex rounded-2xl p-2.5"
+            style={{
+              backgroundImage:
+                "linear-gradient(150deg, #5d7551 0%, #41553c 52%, #2c402a 100%)",
+            }}
+          >
             <LogoImage size={120} />
           </div>
           <div className="font-brand inline-block text-left text-[2.75rem] leading-[0.85] text-primary">
