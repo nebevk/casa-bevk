@@ -1,0 +1,82 @@
+---
+description: Casa Bevk DATABASE — schema map, RLS template, and how to apply migrations via the Supabase MCP. Read before any schema/DB work.
+globs:
+  - "supabase/**"
+  - "**/*.sql"
+  - "src/lib/supabase/**"
+alwaysApply: false
+---
+
+# Casa Bevk — Database
+
+Source of truth: `supabase/migrations/`. Postgres + RLS is the **entire** security
+model for this private two-user app. There is no Supabase project yet — you (the
+Cursor agent with the Supabase MCP) create/apply it.
+
+## Applying migrations (Supabase MCP)
+
+1. Ensure `.cursor/mcp.json` has the `supabase` server (copy `.cursor/mcp.example.json`)
+   with the project ref + a personal access token. `mcp.json` is gitignored — never
+   commit the token.
+2. Apply `supabase/migrations/0001_initial_schema.sql` (idempotent — safe to re-run),
+   then optionally `supabase/seed.sql` (reference data only; no fake users).
+3. Regenerate types afterward: `pnpm db:types`.
+4. Smoke-test once with `supabase db reset` on a throwaway project — the migration
+   was statically validated, not live-run, when authored.
+
+## When you change the schema you MUST also
+
+- add a NEW migration file (`0002_*.sql`, …) — never edit an already-applied one;
+- update **this file** and `docs/SUPABASE.md`;
+- regenerate `src/lib/supabase/database.types.ts` (`pnpm db:types`).
+
+## Tenancy & RLS
+
+- `households` (tenant) → `household_members` (capped at **2**) → `profiles` (mirrors `auth.users`).
+- SECURITY DEFINER helpers (`search_path=''`, fully-qualified) break RLS recursion:
+  `current_household_ids()`, `is_household_member(hid)`, `is_household_owner(hid)`.
+- Bootstrap a household atomically with the `create_household(name)` RPC.
+
+### Template EVERY new table must follow
+
+- `id uuid pk default gen_random_uuid()`; `household_id uuid not null references public.households(id) on delete cascade`; `created_at`/`updated_at`; `created_by`/`updated_by`.
+- triggers: `set_updated_at` and `lock_household_id` (household_id is immutable).
+- `alter table … enable row level security;` + SELECT/INSERT/UPDATE/DELETE policies
+  `to authenticated` using `public.is_household_member(household_id)` (USING **and** WITH CHECK).
+- Personal/private rows: add `owner_id` + `visibility item_visibility`, AND-in
+  `(visibility = 'shared' or owner_id = (select auth.uid()))`, and pin `owner_id`
+  immutable with a guard trigger (see `guard_notes_update`).
+- Child→parent FKs are **composite**: `(parent_id, household_id) references parent(id, household_id)`
+  so a row can never reference another household's parent.
+- Money: `numeric(14,2)` + `currency text check (currency ~ '^[A-Z]{3}$')`. **Never float.**
+- Add the table to the `supabase_realtime` publication if it needs live sync.
+
+## Tables (current)
+
+- **Identity:** profiles, households, household_members, household_settings, user_settings
+- **Lists:** todo_lists, tasks, shopping_lists, shopping_items
+- **Notes:** notes (personal/shared via `visibility`)
+- **Calendar:** calendar_events, event_reminders (per-user)
+- **Money:** expense_categories, expenses, budgets, recurring_payments
+- **Records:** assets (vehicle/property + jsonb `attributes`), providers
+  (internet/mobile/tv… contracts), maintenance_log, documents (personal/shared)
+- **Future/AI seams (created, NOT wired):** attachments, extracted_bill_data,
+  note_embeddings (`vector(1536)`). A `storage.objects` RLS template is commented at
+  the end of the migration.
+
+## Realtime publication
+
+todo_lists, tasks, shopping_lists, shopping_items, notes, calendar_events,
+event_reminders, expense_categories, expenses, budgets, recurring_payments, assets,
+providers, maintenance_log, documents, attachments, household_members, households,
+household_settings, profiles. (AI/staging tables excluded.)
+
+## Open questions (decide as features land)
+
+- **Owner deletion:** `households.owner_id` is `RESTRICT` → needs an ownership-transfer
+  flow before an owner's auth user can be deleted.
+- **Invite flow:** the owner can add any existing `profile.id` as the 2nd member (no
+  acceptance step) — fine for two people, revisit if it grows.
+- Confirm embedding **dimension** (1536) before backfilling pgvector; decide
+  multi-currency vs single `household_settings.currency`; decide whether
+  `extracted_bill_data` should be owner-private.
