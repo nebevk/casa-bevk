@@ -12,7 +12,12 @@ export type ExpenseRow = {
   paid_by: string | null;
 };
 export type CategoryRow = { id: string; name: string };
-export type BudgetRow = { id: string; category_id: string | null; amount: number };
+export type BudgetRow = {
+  id: string;
+  category_id: string | null;
+  amount: number;
+  member_id: string | null;
+};
 
 export async function getExpenseCategories(): Promise<CategoryRow[]> {
   const user = await getUser();
@@ -51,9 +56,15 @@ export async function getBudgetsForMonth(
   const user = await getUser();
   if (!user) return [];
   const supabase = await createClient();
+  // select("*") so this stays safe before the member_id column (0003) exists.
   const { data } = await supabase
     .from("budgets")
-    .select("id, category_id, amount")
+    .select("*")
     .eq("period_month", periodMonth);
-  return data ?? [];
+  return (data ?? []).map((b) => ({
+    id: b.id,
+    category_id: b.category_id,
+    amount: b.amount,
+    member_id: (b as { member_id?: string | null }).member_id ?? null,
+  }));
 }

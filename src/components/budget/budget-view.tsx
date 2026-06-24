@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { Member } from "@/lib/auth/dal";
 import type { MonthInfo } from "@/lib/expenses/month";
 import { setBudget } from "@/lib/expenses/actions";
 import { formatMoney } from "@/lib/format";
@@ -11,15 +12,26 @@ import { cn } from "@/lib/utils";
 
 export type BudgetRowData = { name: string; budget: number; spent: number };
 
+const hrefFor = (monthKey: string, memberId: string | null) =>
+  `/budgets?month=${monthKey}${memberId ? `&member=${memberId}` : ""}`;
+
 export function BudgetView({
   rows,
   month,
+  members,
+  selectedMember,
 }: {
   rows: BudgetRowData[];
   month: MonthInfo;
+  members: Member[];
+  selectedMember: string | null;
 }) {
   const totalBudget = rows.reduce((s, r) => s + r.budget, 0);
   const totalSpent = rows.reduce((s, r) => s + r.spent, 0);
+
+  const scopes = [{ id: null as string | null, label: "Shared" }].concat(
+    members.map((m) => ({ id: m.id as string | null, label: m.name })),
+  );
 
   return (
     <div className="space-y-6">
@@ -28,13 +40,30 @@ export function BudgetView({
           Budget
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Set a monthly plan per category and track it against spending.
+          Set a monthly plan per category — shared or per person.
         </p>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {scopes.map((s) => (
+          <Link
+            key={s.id ?? "shared"}
+            href={hrefFor(month.key, s.id)}
+            className={cn(
+              "rounded-full border px-3 py-1 text-sm transition-colors",
+              selectedMember === s.id
+                ? "border-primary bg-primary/10 text-foreground"
+                : "border-border text-muted-foreground hover:bg-muted",
+            )}
+          >
+            {s.label}
+          </Link>
+        ))}
       </div>
 
       <div className="flex items-center justify-between rounded-lg border border-border bg-card p-3">
         <Link
-          href={`/budgets?month=${month.prevKey}`}
+          href={hrefFor(month.prevKey, selectedMember)}
           className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
           aria-label="Previous month"
         >
@@ -50,7 +79,7 @@ export function BudgetView({
           </p>
         </div>
         <Link
-          href={`/budgets?month=${month.nextKey}`}
+          href={hrefFor(month.nextKey, selectedMember)}
           className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
           aria-label="Next month"
         >
@@ -60,7 +89,12 @@ export function BudgetView({
 
       <div className="space-y-2">
         {rows.map((row) => (
-          <BudgetRow key={row.name} row={row} periodMonth={month.periodMonth} />
+          <BudgetRow
+            key={row.name}
+            row={row}
+            periodMonth={month.periodMonth}
+            memberId={selectedMember}
+          />
         ))}
       </div>
     </div>
@@ -70,9 +104,11 @@ export function BudgetView({
 function BudgetRow({
   row,
   periodMonth,
+  memberId,
 }: {
   row: BudgetRowData;
   periodMonth: string;
+  memberId: string | null;
 }) {
   const [value, setValue] = useState(row.budget ? String(row.budget) : "");
   const [, startTransition] = useTransition();
@@ -83,7 +119,7 @@ function BudgetRow({
   function save() {
     const amount = Number(value);
     if (!Number.isFinite(amount) || amount < 0 || amount === row.budget) return;
-    startTransition(() => setBudget(row.name, periodMonth, amount));
+    startTransition(() => setBudget(row.name, periodMonth, amount, memberId));
   }
 
   return (

@@ -60,21 +60,35 @@ export async function setBudget(
   categoryName: string,
   periodMonth: string,
   amount: number,
+  memberId: string | null = null,
 ) {
   if (!Number.isFinite(amount) || amount < 0) return;
   const { household, supabase } = await authedContext();
   const category_id = await ensureCategoryId(supabase, household.id, categoryName);
 
-  const { data: existing } = await supabase
+  // Fetch candidates and match the member in JS — member_id may not exist yet
+  // (migration 0003). Shared budgets work regardless; personal need 0003.
+  const { data: rows } = await supabase
     .from("budgets")
-    .select("id")
+    .select("*")
     .eq("household_id", household.id)
     .eq("category_id", category_id)
-    .eq("period_month", periodMonth)
-    .maybeSingle();
+    .eq("period_month", periodMonth);
+  const existing = (rows ?? []).find(
+    (r) => ((r as { member_id?: string | null }).member_id ?? null) === memberId,
+  );
 
   if (existing) {
     await supabase.from("budgets").update({ amount }).eq("id", existing.id);
+  } else if (memberId) {
+    // personal budget — requires migration 0003 (budgets.member_id)
+    await supabase.from("budgets").insert({
+      household_id: household.id,
+      category_id,
+      period_month: periodMonth,
+      amount,
+      member_id: memberId,
+    } as never);
   } else {
     await supabase.from("budgets").insert({
       household_id: household.id,

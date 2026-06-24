@@ -3,14 +3,18 @@
 How to stand up the backend. Casa Bevk is private and **invite-only**: public
 sign-up is disabled and exactly two accounts are pre-provisioned.
 
-## 1. Create the project
+## 1. Project
 
-- Create a Supabase project. Note the **Project Ref**.
-- Project Settings → API: copy the **Project URL** and **anon / publishable key**
-  into `.env.local` (see `.env.example`). Keep the **service_role** key
-  server-only — never expose it to the client or commit it.
+**Remote project (scaffolded):** `casa-bevk` — ref `bqahklmyziowboicwwjj`, region `eu-central-1`.
+
+- Dashboard: https://supabase.com/dashboard/project/bqahklmyziowboicwwjj
+- Copy the **Project URL** and **anon / publishable key** into `.env.local` (see `.env.example`). Keep the **service_role** key server-only — never expose it to the client or commit it.
 
 ## 2. Apply the schema
+
+> **Pending migrations** (apply in order via Cursor's Supabase MCP, then run
+> `pnpm db:types`): `0002_notes_category.sql` (note categories) and
+> `0003_member_budgets.sql` (per-person budgets). Both are idempotent and additive.
 
 The schema + RLS are the source of truth in `supabase/migrations/`. Two ways:
 
