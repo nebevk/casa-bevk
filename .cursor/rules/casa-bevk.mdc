@@ -1,0 +1,39 @@
+---
+description: Casa Bevk — project conventions (always read)
+alwaysApply: true
+---
+
+# Casa Bevk
+
+Private family hub for **exactly two users** sharing one household. Calm, warm
+"Sage & Linen" theme. Not a social app.
+
+## Stack (fixed)
+Next.js 16 (App Router, `src/`, `@/*`) · React 19 · Supabase (Postgres + Auth +
+Realtime + RLS) · Tailwind v4 (CSS-first `@theme`, no `tailwind.config.js`) ·
+shadcn/ui · Vercel · **pnpm only** (never npm/yarn — conflicting lockfile).
+
+## Next.js 16 gotchas
+APIs differ from older Next — read `node_modules/next/dist/docs/` before coding.
+- `middleware.ts` no longer exists → `src/proxy.ts` (named export `proxy`, Node runtime).
+- `cookies()` and `headers()` are **async** — always `await`.
+
+## Supabase / auth
+- Use `@supabase/ssr` with the `getAll`/`setAll` cookie API **only**. Never the
+  deprecated `@supabase/auth-helpers-nextjs` or `get/set/remove`.
+- Clients: `lib/supabase/client.ts` (browser), `server.ts` (async server),
+  `session.ts` (proxy refresh). Authorization in `lib/auth/dal.ts` uses
+  `getUser()` (never `getSession()`); **RLS is the real backstop**.
+- Invite-only: public sign-up is disabled, only two pre-provisioned users. No
+  `/signup` route.
+
+## Database
+Source of truth: `supabase/migrations/`. Detailed schema + RLS template + how to
+apply via the Supabase MCP are in `database.mdc`. Money is `numeric(14,2)` + a
+3-letter currency (never float). Every new table is household-scoped with RLS.
+
+## Theme
+"Sage & Linen" tokens live in `src/app/globals.css` (sage `#6B8E6B` on linen
+`#F7F5F0`). Use shadcn components and the semantic tokens, not raw colors.
+
+Roadmap: `TODO.md`.
