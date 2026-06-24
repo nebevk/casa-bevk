@@ -4,12 +4,11 @@ import {
   CalendarDays,
   LayoutDashboard,
   ListTodo,
-  PiggyBank,
-  Receipt,
   Repeat,
   Settings,
   ShoppingCart,
   StickyNote,
+  Wallet,
 } from "lucide-react";
 
 export const APP_NAME = "Casa Bevk";
@@ -42,8 +41,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Shopping", href: "/shopping", icon: ShoppingCart, description: "Shopping lists" },
   { label: "Notes", href: "/notes", icon: StickyNote, description: "Personal & shared notes" },
   { label: "Calendar", href: "/calendar", icon: CalendarDays, description: "Family calendar & reminders" },
-  { label: "Expenses", href: "/expenses", icon: Receipt, description: "Track spending" },
-  { label: "Budget", href: "/budgets", icon: PiggyBank, description: "Monthly budgets" },
+  { label: "Finances", href: "/finances", icon: Wallet, description: "Expenses & budget" },
   { label: "Subscriptions", href: "/subscriptions", icon: Repeat, description: "Recurring payments" },
   { label: "Records", href: "/records", icon: Boxes, description: "Cars, apartment & providers" },
 ];

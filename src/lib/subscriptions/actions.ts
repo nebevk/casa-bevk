@@ -149,5 +149,6 @@ export async function markSubscriptionPaid(id: string) {
   revalidatePath("/subscriptions");
   revalidatePath("/expenses");
   revalidatePath("/budgets");
+  revalidatePath("/finances");
   revalidatePath("/dashboard");
 }

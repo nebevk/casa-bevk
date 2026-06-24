@@ -44,6 +44,7 @@ export async function addExpense(formData: FormData) {
   });
   revalidatePath("/expenses");
   revalidatePath("/budgets");
+  revalidatePath("/finances");
 }
 
 export async function deleteExpense(id: string) {
@@ -54,6 +55,7 @@ export async function deleteExpense(id: string) {
     .eq("id", id);
   revalidatePath("/expenses");
   revalidatePath("/budgets");
+  revalidatePath("/finances");
 }
 
 export async function setBudget(
@@ -98,4 +100,5 @@ export async function setBudget(
     });
   }
   revalidatePath("/budgets");
+  revalidatePath("/finances");
 }
