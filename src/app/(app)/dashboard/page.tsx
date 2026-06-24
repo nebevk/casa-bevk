@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CalendarDays, ListTodo, PiggyBank, Repeat } from "lucide-react";
+import { CalendarDays, Leaf, ListTodo, PiggyBank, Repeat } from "lucide-react";
 import { getProfile } from "@/lib/auth/dal";
 import {
   Card,
@@ -52,9 +52,12 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-heading text-2xl font-semibold tracking-tight md:text-3xl">
-          {greeting()}
-          {name ? `, ${name}` : ""} 🌿
+        <h1 className="flex items-center gap-2 font-heading text-2xl font-semibold tracking-tight md:text-3xl">
+          <span>
+            {greeting()}
+            {name ? `, ${name}` : ""}
+          </span>
+          <Leaf className="size-6 shrink-0 text-primary" />
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Here’s your household at a glance.

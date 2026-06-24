@@ -55,7 +55,7 @@
 }
 
 :root {
-  --radius: 0.75rem;
+  --radius: 0.5rem;
 
   /* Surfaces */
   --background: oklch(0.966 0.006 95); /* linen #F7F5F0 */
