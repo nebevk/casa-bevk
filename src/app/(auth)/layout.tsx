@@ -16,7 +16,7 @@ export default async function AuthLayout({
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-3 inline-flex rounded-2xl bg-[#41553c] p-2.5">
-            <LogoImage size={84} />
+            <LogoImage size={120} />
           </div>
           <div className="font-brand inline-block text-left text-[2.75rem] leading-[0.85] text-primary">
             <div>Casa</div>
