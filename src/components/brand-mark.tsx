@@ -1,4 +1,4 @@
-/** Casa Bevk brand mark: a little house with two pineapples on a sage square. */
+/** Casa Bevk brand mark: an outline house with a climbing vine and a pineapple inside. */
 export function BrandSvg({
   size = 512,
   rounded = true,
@@ -19,20 +19,35 @@ export function BrandSvg({
       aria-label="Casa Bevk"
     >
       <rect width="512" height="512" rx={rounded ? 112 : 0} fill="#6B8E6B" />
-      {/* house */}
-      <path d="M256 150 L372 256 L140 256 Z" fill="#F7F5F0" />
-      <rect x="170" y="248" width="172" height="132" rx="10" fill="#F7F5F0" />
-      <rect x="234" y="322" width="44" height="58" rx="6" fill="#6B8E6B" />
-      {/* left pineapple */}
-      <ellipse cx="206" cy="388" rx="24" ry="30" fill="#E8B45A" />
-      <path d="M206 342 L196 372 L216 372 Z" fill="#5E7A52" />
-      <path d="M182 352 L204 374 L210 366 Z" fill="#5E7A52" />
-      <path d="M230 352 L208 374 L202 366 Z" fill="#5E7A52" />
-      {/* right pineapple */}
-      <ellipse cx="306" cy="388" rx="24" ry="30" fill="#E8B45A" />
-      <path d="M306 342 L296 372 L316 372 Z" fill="#5E7A52" />
-      <path d="M282 352 L304 374 L310 366 Z" fill="#5E7A52" />
-      <path d="M330 352 L308 374 L302 366 Z" fill="#5E7A52" />
+
+      {/* house outline */}
+      <path
+        d="M150 386 L150 250 L256 154 L362 250 L362 386 Z"
+        fill="none"
+        stroke="#F7F5F0"
+        strokeWidth={14}
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+
+      {/* vine climbing the left wall and over the roof */}
+      <path
+        d="M150 386 C 116 348 130 300 152 252 C 162 232 184 214 210 206"
+        fill="none"
+        stroke="#F7F5F0"
+        strokeWidth={7}
+        strokeLinecap="round"
+      />
+      <ellipse cx="120" cy="336" rx="9" ry="16" fill="#F7F5F0" />
+      <ellipse cx="124" cy="288" rx="9" ry="16" fill="#F7F5F0" />
+      <ellipse cx="150" cy="232" rx="9" ry="16" fill="#F7F5F0" />
+      <ellipse cx="192" cy="210" rx="9" ry="16" fill="#F7F5F0" />
+
+      {/* pineapple inside */}
+      <ellipse cx="262" cy="332" rx="30" ry="36" fill="#E8B45A" />
+      <path d="M262 276 L249 314 L275 314 Z" fill="#5E7A52" />
+      <path d="M236 288 L259 316 L267 306 Z" fill="#5E7A52" />
+      <path d="M288 288 L265 316 L257 306 Z" fill="#5E7A52" />
     </svg>
   );
 }
