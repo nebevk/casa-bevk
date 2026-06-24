@@ -1,15 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Receipt, StickyNote, type LucideIcon } from "lucide-react";
+import {
+  CalendarDays,
+  ListTodo,
+  Plus,
+  Receipt,
+  ShoppingCart,
+  StickyNote,
+  type LucideIcon,
+} from "lucide-react";
 import type { Member } from "@/lib/auth/dal";
 import { NoteDialog } from "@/components/notes/note-dialog";
 import { ExpenseDialog } from "@/components/expenses/expense-dialog";
+import { EventDialog } from "@/components/calendar/event-dialog";
+import { QuickTaskDialog } from "@/components/tasks/quick-task-dialog";
+import { QuickShoppingDialog } from "@/components/shopping/quick-shopping-dialog";
 import { cn } from "@/lib/utils";
 
+type QuickAction = "expense" | "task" | "shopping" | "event" | "note";
+
 /**
- * Floating bottom-right speed-dial. Tap to reveal quick "Expense" and "Note"
- * capture — so jotting a purchase or a thought is one tap from anywhere.
+ * Floating bottom-right speed-dial. Tap to reveal quick capture for an expense,
+ * to-do, shopping item, event, or note — one tap from anywhere.
  */
 export function QuickAdd({
   members,
@@ -21,32 +34,33 @@ export function QuickAdd({
   currentUserId: string | null;
 }) {
   const [open, setOpen] = useState(false);
-  const [expenseOpen, setExpenseOpen] = useState(false);
-  const [noteOpen, setNoteOpen] = useState(false);
+  const [active, setActive] = useState<QuickAction | null>(null);
+  const close = () => setActive(null);
+  const pick = (a: QuickAction) => {
+    setActive(a);
+    setOpen(false);
+  };
+
+  const actions: { key: QuickAction; label: string; icon: LucideIcon }[] = [
+    { key: "expense", label: "Expense", icon: Receipt },
+    { key: "task", label: "To-do", icon: ListTodo },
+    { key: "shopping", label: "Shopping", icon: ShoppingCart },
+    { key: "event", label: "Event", icon: CalendarDays },
+    { key: "note", label: "Note", icon: StickyNote },
+  ];
 
   return (
     <>
       <div className="fixed right-5 bottom-5 z-40 flex flex-col items-end gap-3 md:right-8 md:bottom-8">
-        {open && (
-          <>
+        {open &&
+          actions.map((a) => (
             <Action
-              label="Expense"
-              icon={Receipt}
-              onClick={() => {
-                setExpenseOpen(true);
-                setOpen(false);
-              }}
+              key={a.key}
+              label={a.label}
+              icon={a.icon}
+              onClick={() => pick(a.key)}
             />
-            <Action
-              label="Note"
-              icon={StickyNote}
-              onClick={() => {
-                setNoteOpen(true);
-                setOpen(false);
-              }}
-            />
-          </>
-        )}
+          ))}
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
@@ -62,10 +76,21 @@ export function QuickAdd({
         members={members}
         categories={categories}
         currentUserId={currentUserId}
-        open={expenseOpen}
-        onOpenChange={setExpenseOpen}
+        open={active === "expense"}
+        onOpenChange={(o) => !o && close()}
       />
-      <NoteDialog open={noteOpen} onOpenChange={setNoteOpen} />
+      <QuickTaskDialog
+        members={members}
+        currentUserId={currentUserId}
+        open={active === "task"}
+        onOpenChange={(o) => !o && close()}
+      />
+      <QuickShoppingDialog
+        open={active === "shopping"}
+        onOpenChange={(o) => !o && close()}
+      />
+      <EventDialog open={active === "event"} onOpenChange={(o) => !o && close()} />
+      <NoteDialog open={active === "note"} onOpenChange={(o) => !o && close()} />
     </>
   );
 }
