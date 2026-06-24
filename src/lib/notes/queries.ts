@@ -11,6 +11,7 @@ export type NoteRow = {
   is_pinned: boolean;
   owner_id: string | null;
   updated_at: string;
+  category: string | null;
 };
 
 /** Active notes the user can see (shared + their own personal), pinned first. */
@@ -20,7 +21,7 @@ export async function getNotes(): Promise<NoteRow[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("notes")
-    .select("id, title, body, visibility, is_pinned, owner_id, updated_at")
+    .select("id, title, body, visibility, is_pinned, owner_id, updated_at, category")
     .is("deleted_at", null)
     .order("is_pinned", { ascending: false })
     .order("updated_at", { ascending: false });

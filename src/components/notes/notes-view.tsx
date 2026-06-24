@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { Pin, Plus, Search, StickyNote, Trash2 } from "lucide-react";
 import type { NoteRow } from "@/lib/notes/queries";
 import { deleteNote, togglePin } from "@/lib/notes/actions";
@@ -13,15 +13,29 @@ type Mutate = (fn: () => Promise<void> | void) => void;
 
 export function NotesView({ notes }: { notes: NoteRow[] }) {
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<"all" | "shared" | "personal">("all");
+  const [visibility, setVisibility] = useState<"all" | "shared" | "personal">(
+    "all",
+  );
+  const [category, setCategory] = useState<string | null>(null);
   const [editing, setEditing] = useState<NoteRow | null>(null);
   const [, startTransition] = useTransition();
   const mutate: Mutate = (fn) => startTransition(fn);
 
+  const categories = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          notes.map((n) => n.category).filter((c): c is string => Boolean(c)),
+        ),
+      ).sort((a, b) => a.localeCompare(b)),
+    [notes],
+  );
+
   const filtered = notes.filter((n) => {
-    if (filter !== "all" && n.visibility !== filter) return false;
+    if (visibility !== "all" && n.visibility !== visibility) return false;
+    if (category && n.category !== category) return false;
     if (query.trim()) {
-      const hay = `${n.title ?? ""} ${n.body ?? ""}`.toLowerCase();
+      const hay = `${n.title ?? ""} ${n.body ?? ""} ${n.category ?? ""}`.toLowerCase();
       if (!hay.includes(query.trim().toLowerCase())) return false;
     }
     return true;
@@ -39,6 +53,7 @@ export function NotesView({ notes }: { notes: NoteRow[] }) {
           </p>
         </div>
         <NoteDialog
+          categories={categories}
           trigger={
             <Button>
               <Plus />
@@ -63,10 +78,10 @@ export function NotesView({ notes }: { notes: NoteRow[] }) {
             <button
               key={f}
               type="button"
-              onClick={() => setFilter(f)}
+              onClick={() => setVisibility(f)}
               className={cn(
                 "rounded-full border px-3 py-1 text-sm capitalize transition-colors",
-                filter === f
+                visibility === f
                   ? "border-primary bg-primary/10 text-foreground"
                   : "border-border text-muted-foreground hover:bg-muted",
               )}
@@ -77,13 +92,30 @@ export function NotesView({ notes }: { notes: NoteRow[] }) {
         </div>
       </div>
 
+      {categories.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          <CategoryChip active={category === null} onClick={() => setCategory(null)}>
+            All categories
+          </CategoryChip>
+          {categories.map((c) => (
+            <CategoryChip
+              key={c}
+              active={category === c}
+              onClick={() => setCategory(c)}
+            >
+              {c}
+            </CategoryChip>
+          ))}
+        </div>
+      )}
+
       {filtered.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border bg-card/50 py-16 text-center">
           <StickyNote className="mx-auto size-8 text-muted-foreground/60" />
           <p className="mt-2 text-sm text-muted-foreground">
             {notes.length === 0
               ? "No notes yet — add one with “New note” or the button in the corner."
-              : "No notes match your search."}
+              : "No notes match your filters."}
           </p>
         </div>
       ) : (
@@ -93,6 +125,7 @@ export function NotesView({ notes }: { notes: NoteRow[] }) {
               key={note.id}
               note={note}
               onEdit={() => setEditing(note)}
+              onPickCategory={setCategory}
               mutate={mutate}
             />
           ))}
@@ -102,6 +135,7 @@ export function NotesView({ notes }: { notes: NoteRow[] }) {
       {editing && (
         <NoteDialog
           note={editing}
+          categories={categories}
           open
           onOpenChange={(o) => {
             if (!o) setEditing(null);
@@ -112,13 +146,40 @@ export function NotesView({ notes }: { notes: NoteRow[] }) {
   );
 }
 
+function CategoryChip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "rounded-full border px-3 py-1 text-sm transition-colors",
+        active
+          ? "border-primary bg-primary/10 text-foreground"
+          : "border-border text-muted-foreground hover:bg-muted",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
 function NoteCard({
   note,
   onEdit,
+  onPickCategory,
   mutate,
 }: {
   note: NoteRow;
   onEdit: () => void;
+  onPickCategory: (c: string) => void;
   mutate: Mutate;
 }) {
   return (
@@ -158,7 +219,7 @@ function NoteCard({
           {note.body}
         </p>
       )}
-      <div className="mt-3">
+      <div className="mt-3 flex flex-wrap items-center gap-1.5">
         <span
           className={cn(
             "rounded-full px-2 py-0.5 text-[10px] font-medium",
@@ -169,6 +230,18 @@ function NoteCard({
         >
           {note.visibility === "personal" ? "Personal" : "Shared"}
         </span>
+        {note.category && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onPickCategory(note.category!);
+            }}
+            className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary hover:bg-primary/20"
+          >
+            {note.category}
+          </button>
+        )}
       </div>
     </div>
   );

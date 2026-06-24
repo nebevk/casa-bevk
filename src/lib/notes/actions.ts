@@ -16,11 +16,12 @@ function readNote(formData: FormData) {
   const body = String(formData.get("body") ?? "").trim() || null;
   const visibility =
     formData.get("visibility") === "personal" ? "personal" : "shared";
-  return { title, body, visibility } as const;
+  const category = String(formData.get("category") ?? "").trim() || null;
+  return { title, body, visibility, category } as const;
 }
 
 export async function addNote(formData: FormData) {
-  const { title, body, visibility } = readNote(formData);
+  const { title, body, visibility, category } = readNote(formData);
   if (!title && !body) return;
   const { user, household, supabase } = await authedContext();
   await supabase.from("notes").insert({
@@ -29,15 +30,19 @@ export async function addNote(formData: FormData) {
     visibility,
     title,
     body,
+    category,
     created_by: user.id,
   });
   revalidatePath("/notes");
 }
 
 export async function updateNote(id: string, formData: FormData) {
-  const { title, body, visibility } = readNote(formData);
+  const { title, body, visibility, category } = readNote(formData);
   const { supabase } = await authedContext();
-  await supabase.from("notes").update({ title, body, visibility }).eq("id", id);
+  await supabase
+    .from("notes")
+    .update({ title, body, visibility, category })
+    .eq("id", id);
   revalidatePath("/notes");
 }
 

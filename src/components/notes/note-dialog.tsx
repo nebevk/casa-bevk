@@ -21,16 +21,19 @@ export type EditableNote = {
   title: string | null;
   body: string | null;
   visibility: string;
+  category: string | null;
 };
 
 export function NoteDialog({
   trigger,
   note,
+  categories = [],
   open,
   onOpenChange,
 }: {
   trigger?: ReactNode;
   note?: EditableNote;
+  categories?: string[];
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
@@ -98,6 +101,22 @@ export function NoteDialog({
               </button>
             ))}
           </div>
+
+          <Input
+            name="category"
+            list="note-categories"
+            defaultValue={note?.category ?? ""}
+            placeholder="Category (optional) — e.g. Recipes, Ideas, Travel"
+            autoComplete="off"
+          />
+          {categories.length > 0 && (
+            <datalist id="note-categories">
+              {categories.map((c) => (
+                <option key={c} value={c} />
+              ))}
+            </datalist>
+          )}
+
           <DialogFooter>
             <Button type="submit" disabled={isPending}>
               {isPending && <Loader2 className="animate-spin" />}
