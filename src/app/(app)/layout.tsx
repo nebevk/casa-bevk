@@ -1,17 +1,26 @@
 import type { ReactNode } from "react";
-import { getProfile, requireUser } from "@/lib/auth/dal";
+import {
+  getHouseholdMembers,
+  getProfile,
+  requireUser,
+} from "@/lib/auth/dal";
+import { getExpenseCategories } from "@/lib/expenses/queries";
 import { AppSidebar } from "@/components/app-shell/app-sidebar";
 import { TopBar } from "@/components/app-shell/top-bar";
 import { RealtimeProvider } from "@/components/providers/realtime-provider";
-import { QuickAddNote } from "@/components/notes/quick-add-note";
+import { QuickAdd } from "@/components/quick-add";
 
 export default async function AppLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  const user = await requireUser();
-  const profile = await getProfile();
+  const [user, profile, members, categories] = await Promise.all([
+    requireUser(),
+    getProfile(),
+    getHouseholdMembers(),
+    getExpenseCategories(),
+  ]);
   const name =
     (profile as { display_name?: string } | null)?.display_name ?? null;
 
@@ -26,7 +35,11 @@ export default async function AppLayout({
           </main>
         </div>
       </div>
-      <QuickAddNote />
+      <QuickAdd
+        members={members}
+        categories={categories.map((c) => c.name)}
+        currentUserId={user.id}
+      />
     </RealtimeProvider>
   );
 }
