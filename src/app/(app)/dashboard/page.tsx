@@ -4,12 +4,17 @@ import Link from "next/link";
 import {
   CalendarClock,
   CalendarDays,
+  Car,
   Leaf,
   ListTodo,
   Repeat,
+  Shield,
   ShoppingCart,
   Sparkles,
+  Stethoscope,
   StickyNote,
+  Wrench,
+  type LucideIcon,
 } from "lucide-react";
 import { getHouseholdMembers, getProfile } from "@/lib/auth/dal";
 import { getTasks } from "@/lib/tasks/queries";
@@ -21,7 +26,10 @@ import { getSubscriptions } from "@/lib/subscriptions/queries";
 import { getDailyVerse } from "@/lib/dashboard/verse";
 import { getWeather } from "@/lib/dashboard/weather";
 import { WeatherCard } from "@/components/dashboard/weather-card";
-import { daysUntil, formatMoney } from "@/lib/format";
+import { getAssets, getMaintenanceEntries } from "@/lib/records/queries";
+import { getHealthReminders } from "@/lib/medical/queries";
+import { daysUntil, formatDate, formatMoney } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -42,17 +50,31 @@ function greeting() {
 }
 
 export default async function DashboardPage() {
-  const [tasks, notes, items, members, profile, verse, events, subscriptions] =
-    await Promise.all([
-      getTasks(),
-      getNotes(),
-      getShoppingItems(),
-      getHouseholdMembers(),
-      getProfile(),
-      getDailyVerse(),
-      getEvents(),
-      getSubscriptions(),
-    ]);
+  const [
+    tasks,
+    notes,
+    items,
+    members,
+    profile,
+    verse,
+    events,
+    subscriptions,
+    assets,
+    maintenance,
+    healthReminders,
+  ] = await Promise.all([
+    getTasks(),
+    getNotes(),
+    getShoppingItems(),
+    getHouseholdMembers(),
+    getProfile(),
+    getDailyVerse(),
+    getEvents(),
+    getSubscriptions(),
+    getAssets(),
+    getMaintenanceEntries(),
+    getHealthReminders(),
+  ]);
 
   const name = (profile as { display_name?: string } | null)?.display_name;
   const memberName = new Map(members.map((m) => [m.id, m.name] as const));
@@ -74,6 +96,30 @@ export default async function DashboardPage() {
       (s) => s.is_active && s.next_due_on && new Date(s.next_due_on) <= in14Days,
     )
     .slice(0, 5);
+
+  const in60Days = new Date(now.getTime() + 60 * 86_400_000);
+  type Obligation = { id: string; label: string; date: string; icon: LucideIcon };
+  const obligations: Obligation[] = [];
+  for (const a of assets) {
+    if (a.type !== "vehicle") continue;
+    const reg = a.attributes.registration_due;
+    const ins = a.attributes.insurance_due;
+    if (typeof reg === "string")
+      obligations.push({ id: `${a.id}-reg`, label: `${a.name} — registracija`, date: reg, icon: Car });
+    if (typeof ins === "string")
+      obligations.push({ id: `${a.id}-ins`, label: `${a.name} — zavarovanje`, date: ins, icon: Shield });
+  }
+  for (const e of maintenance) {
+    if (e.next_service_on)
+      obligations.push({ id: e.id, label: e.title, date: e.next_service_on, icon: Wrench });
+  }
+  for (const r of healthReminders) {
+    obligations.push({ id: r.id, label: r.title, date: r.due_on, icon: Stethoscope });
+  }
+  const upcomingObligations = obligations
+    .filter((o) => new Date(o.date) <= in60Days)
+    .sort((x, y) => (x.date < y.date ? -1 : 1))
+    .slice(0, 6);
 
   const stats = [
     { label: "Due today", value: dueToday.length, href: "/tasks", icon: CalendarClock },
@@ -204,6 +250,46 @@ export default async function DashboardPage() {
                     <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
                       {formatMoney(s.amount)}
                       {d != null && d >= 0 ? ` · ${d}d` : ""}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Panel>
+
+        <Panel
+          title="Renewals & reminders"
+          description="Car, home &amp; health — coming up."
+          icon={CalendarClock}
+        >
+          {upcomingObligations.length === 0 ? (
+            <Empty>Nothing coming up.</Empty>
+          ) : (
+            <ul className="space-y-2.5">
+              {upcomingObligations.map((o) => {
+                const d = daysUntil(o.date);
+                const Icon = o.icon;
+                return (
+                  <li
+                    key={o.id}
+                    className="flex items-center justify-between gap-2 text-sm"
+                  >
+                    <span className="flex min-w-0 items-center gap-2">
+                      <Icon className="size-3.5 shrink-0 text-muted-foreground" />
+                      <span className="line-clamp-1">{o.label}</span>
+                    </span>
+                    <span
+                      className={cn(
+                        "shrink-0 text-xs tabular-nums",
+                        d != null && d < 0
+                          ? "text-destructive"
+                          : d != null && d <= 14
+                            ? "text-primary"
+                            : "text-muted-foreground",
+                      )}
+                    >
+                      {formatDate(o.date)}
                     </span>
                   </li>
                 );
