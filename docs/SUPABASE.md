@@ -14,8 +14,11 @@ sign-up is disabled and exactly two accounts are pre-provisioned.
 
 The schema + RLS are the source of truth in `supabase/migrations/`. Applied on
 the remote project through `0003_member_budgets` (includes `notes.category` and
-`budgets.member_id`). Regenerate types after new migrations: `pnpm db:types`
-(or Supabase MCP `generate_typescript_types` if the CLI is not linked).
+`budgets.member_id`). **`0004_records_medical.sql` — `medical_contacts` +
+`health_reminders`, and extends `provider_type` with
+electricity/gas/upravnik/komunala — is pending; apply it via the Supabase MCP.**
+Regenerate types after new migrations: `pnpm db:types` (or Supabase MCP
+`generate_typescript_types` if the CLI is not linked).
 
 Two ways to apply **new** migrations:
 

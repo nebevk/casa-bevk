@@ -59,8 +59,15 @@ applied through `0003_member_budgets`; types in `src/lib/supabase/database.types
 - **Calendar:** calendar_events, event_reminders (per-user)
 - **Money:** expense_categories, expenses, budgets (per-month per-category; optional
   per-member via `member_id` in `0003`), recurring_payments (subscriptions)
-- **Records:** assets (vehicle/property + jsonb `attributes`), providers
-  (internet/mobile/tv… contracts), maintenance_log, documents (personal/shared)
+- **Records:** assets (vehicle/property + jsonb `attributes` — cars also keep
+  registracija/zavarovanje + full spec in `attributes`), providers
+  (internet/mobile/tv/electricity/gas/upravnik/komunala… contracts; `provider_type`
+  extended in `0004`), maintenance_log (services + inspections, `next_service_on`),
+  documents (personal/shared)
+- **Medical (`0004_records_medical.sql`):** medical_contacts (doctors/dentists;
+  `kind` gp/dentist/pediatrician/gynecologist/specialist/other; `member_id` null =
+  both), health_reminders (checkups/vaccinations; `due_on`, optional `interval_months`,
+  `completed_at`; `kind` checkup/vaccination/screening/other)
 - **Future/AI seams (created, NOT wired):** attachments, extracted_bill_data,
   note_embeddings (`vector(1536)`). A `storage.objects` RLS template is commented at
   the end of the migration.
@@ -69,8 +76,8 @@ applied through `0003_member_budgets`; types in `src/lib/supabase/database.types
 
 todo_lists, tasks, shopping_lists, shopping_items, notes, calendar_events,
 event_reminders, expense_categories, expenses, budgets, recurring_payments, assets,
-providers, maintenance_log, documents, attachments, household_members, households,
-household_settings, profiles. (AI/staging tables excluded.)
+providers, maintenance_log, medical_contacts, health_reminders, documents, attachments,
+household_members, households, household_settings, profiles. (AI/staging tables excluded.)
 
 ## Open questions (decide as features land)
 
