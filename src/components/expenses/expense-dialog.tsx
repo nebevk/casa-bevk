@@ -2,6 +2,7 @@
 
 import { useState, useTransition, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import type { Member } from "@/lib/auth/dal";
 import { addExpense } from "@/lib/expenses/actions";
 import { DEFAULT_EXPENSE_CATEGORIES } from "@/lib/expenses/constants";
@@ -49,11 +50,15 @@ export function ExpenseDialog({
   function handleSubmit(formData: FormData) {
     formData.set("category", category);
     formData.set("paid_by", paidBy);
+    setOpen(false);
+    setCategory(DEFAULT_EXPENSE_CATEGORIES[0]);
+    setPaidBy(currentUserId ?? "none");
     startTransition(async () => {
-      await addExpense(formData);
-      setOpen(false);
-      setCategory(DEFAULT_EXPENSE_CATEGORIES[0]);
-      setPaidBy(currentUserId ?? "none");
+      try {
+        await addExpense(formData);
+      } catch {
+        toast.error("Couldn't add expense — please try again.");
+      }
     });
   }
 

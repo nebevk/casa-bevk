@@ -2,6 +2,7 @@
 
 import { useState, useTransition, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import type { CalendarEvent } from "@/lib/calendar/recurrence";
 import { addEvent, deleteEvent, updateEvent } from "@/lib/calendar/actions";
 import { todayDateInput } from "@/lib/format";
@@ -86,10 +87,18 @@ export function EventDialog({
     formData.set("recurrence_freq", freq);
     formData.set("recurrence_until", recurrence_until);
 
+    setOpen(false);
+    if (!isEdit) {
+      setAllDay(false);
+      setFreq("none");
+    }
     startTransition(async () => {
-      if (isEdit && event) await updateEvent(event.id, formData);
-      else await addEvent(formData);
-      setOpen(false);
+      try {
+        if (isEdit && event) await updateEvent(event.id, formData);
+        else await addEvent(formData);
+      } catch {
+        toast.error("Couldn't save event — please try again.");
+      }
     });
   }
 
@@ -182,12 +191,16 @@ export function EventDialog({
                 type="button"
                 variant="destructive"
                 disabled={isPending}
-                onClick={() =>
+                onClick={() => {
+                  setOpen(false);
                   startTransition(async () => {
-                    await deleteEvent(event.id);
-                    setOpen(false);
-                  })
-                }
+                    try {
+                      await deleteEvent(event.id);
+                    } catch {
+                      toast.error("Couldn't delete event — please try again.");
+                    }
+                  });
+                }}
               >
                 Delete
               </Button>

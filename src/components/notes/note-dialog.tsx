@@ -2,6 +2,7 @@
 
 import { useState, useTransition, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { addNote, updateNote } from "@/lib/notes/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,10 +47,15 @@ export function NoteDialog({
 
   function handleSubmit(formData: FormData) {
     formData.set("visibility", visibility);
+    setOpen(false);
+    if (!isEdit) setVisibility("shared");
     startTransition(async () => {
-      if (isEdit && note) await updateNote(note.id, formData);
-      else await addNote(formData);
-      setOpen(false);
+      try {
+        if (isEdit && note) await updateNote(note.id, formData);
+        else await addNote(formData);
+      } catch {
+        toast.error("Couldn't save note — please try again.");
+      }
     });
   }
 

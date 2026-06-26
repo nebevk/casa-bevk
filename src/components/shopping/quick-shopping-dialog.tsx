@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { addShoppingItem } from "@/lib/shopping/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,9 +25,13 @@ export function QuickShoppingDialog({
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(formData: FormData) {
+    onOpenChange(false);
     startTransition(async () => {
-      await addShoppingItem(formData);
-      onOpenChange(false);
+      try {
+        await addShoppingItem(formData);
+      } catch {
+        toast.error("Couldn't add item — please try again.");
+      }
     });
   }
 

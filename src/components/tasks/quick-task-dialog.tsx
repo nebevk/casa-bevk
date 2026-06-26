@@ -2,6 +2,7 @@
 
 import { useState, useTransition, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import type { Member } from "@/lib/auth/dal";
 import { addTask } from "@/lib/tasks/actions";
 import { Button } from "@/components/ui/button";
@@ -33,10 +34,14 @@ export function QuickTaskDialog({
 
   function handleSubmit(formData: FormData) {
     formData.set("assignee_id", assignee);
+    onOpenChange(false);
+    setAssignee(currentUserId ?? "none");
     startTransition(async () => {
-      await addTask(formData);
-      onOpenChange(false);
-      setAssignee(currentUserId ?? "none");
+      try {
+        await addTask(formData);
+      } catch {
+        toast.error("Couldn't add task — please try again.");
+      }
     });
   }
 
