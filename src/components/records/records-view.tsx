@@ -5,7 +5,6 @@ import {
   Box,
   Car,
   CalendarClock,
-  ExternalLink,
   Home,
   Pencil,
   Plus,
@@ -26,10 +25,16 @@ import type {
   ProviderRow,
 } from "@/lib/records/queries";
 import { deleteAsset, deleteProvider } from "@/lib/records/actions";
+import type { Member } from "@/lib/auth/dal";
+import type {
+  HealthReminderRow,
+  MedicalContactRow,
+} from "@/lib/medical/queries";
 import { daysUntil, formatDate, formatMoney } from "@/lib/format";
 import { AssetDialog } from "./asset-dialog";
 import { ProviderDialog } from "./provider-dialog";
 import { AssetDetailSheet } from "./asset-detail-sheet";
+import { MedicalSection } from "./medical-section";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -64,10 +69,18 @@ export function RecordsView({
   assets,
   entries,
   providers,
+  medicalContacts,
+  healthReminders,
+  members,
+  currentUserId,
 }: {
   assets: AssetRow[];
   entries: MaintenanceRow[];
   providers: ProviderRow[];
+  medicalContacts: MedicalContactRow[];
+  healthReminders: HealthReminderRow[];
+  members: Member[];
+  currentUserId: string | null;
 }) {
   const [tab, setTab] = useState<Tab>("cars");
   const [openAsset, setOpenAsset] = useState<AssetRow | null>(null);
@@ -409,39 +422,12 @@ export function RecordsView({
 
       {/* ---- MEDICAL ---- */}
       {tab === "medical" && (
-        <div className="space-y-4">
-          <a
-            href="https://dozdravnika.si"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-accent/40 p-4 transition-colors hover:border-primary/50"
-          >
-            <span className="flex items-center gap-3">
-              <span className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
-                <Stethoscope className="size-5" />
-              </span>
-              <span>
-                <span className="block font-medium">Do zdravnika</span>
-                <span className="block text-xs text-muted-foreground">
-                  Book appointments at dozdravnika.si
-                </span>
-              </span>
-            </span>
-            <ExternalLink className="size-4 shrink-0 text-muted-foreground" />
-          </a>
-
-          <div className="rounded-lg border border-dashed border-border bg-card/50 p-5 text-sm text-muted-foreground">
-            <p className="font-medium text-foreground">
-              Doctors, dentists &amp; reminders
-            </p>
-            <p className="mt-1">
-              Saving your doctors/dentists and checkup &amp; vaccination
-              reminders needs a small one-time database update (the
-              <code className="mx-1 rounded bg-muted px-1">0004</code>
-              migration). Apply it in Cursor and this section turns on.
-            </p>
-          </div>
-        </div>
+        <MedicalSection
+          contacts={medicalContacts}
+          reminders={healthReminders}
+          members={members}
+          currentUserId={currentUserId}
+        />
       )}
 
       <AssetDetailSheet
