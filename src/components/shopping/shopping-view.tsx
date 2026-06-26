@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useTransition } from "react";
+import { useOptimistic, useRef, useTransition } from "react";
 import { CheckCircle2, Circle, Loader2, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import type { ShoppingItemRow } from "@/lib/shopping/queries";
 import {
   addShoppingItem,
@@ -13,21 +14,70 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-type Mutate = (fn: () => Promise<void> | void) => void;
+type OptimisticAction =
+  | { kind: "toggle"; id: string }
+  | { kind: "delete"; id: string }
+  | { kind: "clear" }
+  | { kind: "add"; item: ShoppingItemRow };
+
+function applyOptimistic(
+  state: ShoppingItemRow[],
+  action: OptimisticAction,
+): ShoppingItemRow[] {
+  switch (action.kind) {
+    case "toggle":
+      return state.map((i) =>
+        i.id === action.id ? { ...i, is_checked: !i.is_checked } : i,
+      );
+    case "delete":
+      return state.filter((i) => i.id !== action.id);
+    case "clear":
+      return state.filter((i) => !i.is_checked);
+    case "add":
+      return [...state, action.item];
+  }
+}
 
 export function ShoppingView({ items }: { items: ShoppingItemRow[] }) {
   const [isPending, startTransition] = useTransition();
+  const [optimisticItems, optimize] = useOptimistic(items, applyOptimistic);
   const formRef = useRef<HTMLFormElement>(null);
-  const mutate: Mutate = (fn) => startTransition(fn);
 
-  const open = items.filter((i) => !i.is_checked);
-  const checked = items.filter((i) => i.is_checked);
+  // Optimistic update first (instant), then sync to the server in the background.
+  function run(action: OptimisticAction, mutate: () => Promise<void>) {
+    startTransition(async () => {
+      optimize(action);
+      try {
+        await mutate();
+      } catch {
+        toast.error("Couldn't save — please try again.");
+      }
+    });
+  }
+
+  const open = optimisticItems.filter((i) => !i.is_checked);
+  const checked = optimisticItems.filter((i) => i.is_checked);
 
   function handleAdd(formData: FormData) {
-    startTransition(async () => {
-      await addShoppingItem(formData);
-      formRef.current?.reset();
-    });
+    const name = String(formData.get("name") ?? "").trim();
+    if (!name) return;
+    const qty = Number(formData.get("quantity"));
+    const quantity = Number.isFinite(qty) && qty > 0 ? qty : 1;
+    const category = String(formData.get("category") ?? "").trim() || null;
+    formRef.current?.reset();
+    run(
+      {
+        kind: "add",
+        item: {
+          id: `temp-${crypto.randomUUID()}`,
+          name,
+          quantity,
+          category,
+          is_checked: false,
+        },
+      },
+      () => addShoppingItem(formData),
+    );
   }
 
   return (
@@ -44,7 +94,7 @@ export function ShoppingView({ items }: { items: ShoppingItemRow[] }) {
         {checked.length > 0 && (
           <Button
             variant="outline"
-            onClick={() => mutate(() => clearCheckedItems())}
+            onClick={() => run({ kind: "clear" }, () => clearCheckedItems())}
             disabled={isPending}
           >
             <Trash2 />
@@ -95,7 +145,7 @@ export function ShoppingView({ items }: { items: ShoppingItemRow[] }) {
           </p>
         ) : (
           open.map((item) => (
-            <ShoppingItem key={item.id} item={item} mutate={mutate} />
+            <ShoppingItem key={item.id} item={item} run={run} />
           ))
         )}
       </div>
@@ -106,7 +156,7 @@ export function ShoppingView({ items }: { items: ShoppingItemRow[] }) {
             In the cart ({checked.length})
           </h2>
           {checked.map((item) => (
-            <ShoppingItem key={item.id} item={item} mutate={mutate} />
+            <ShoppingItem key={item.id} item={item} run={run} />
           ))}
         </div>
       )}
@@ -114,12 +164,22 @@ export function ShoppingView({ items }: { items: ShoppingItemRow[] }) {
   );
 }
 
-function ShoppingItem({ item, mutate }: { item: ShoppingItemRow; mutate: Mutate }) {
+function ShoppingItem({
+  item,
+  run,
+}: {
+  item: ShoppingItemRow;
+  run: (action: OptimisticAction, mutate: () => Promise<void>) => void;
+}) {
   return (
     <div className="group flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 shadow-sm">
       <button
         type="button"
-        onClick={() => mutate(() => toggleShoppingItem(item.id, !item.is_checked))}
+        onClick={() =>
+          run({ kind: "toggle", id: item.id }, () =>
+            toggleShoppingItem(item.id, !item.is_checked),
+          )
+        }
         className="text-muted-foreground transition-colors hover:text-primary"
         aria-label={item.is_checked ? "Uncheck" : "Check off"}
       >
@@ -152,7 +212,11 @@ function ShoppingItem({ item, mutate }: { item: ShoppingItemRow; mutate: Mutate 
 
       <button
         type="button"
-        onClick={() => mutate(() => deleteShoppingItem(item.id))}
+        onClick={() =>
+          run({ kind: "delete", id: item.id }, () =>
+            deleteShoppingItem(item.id),
+          )
+        }
         className="text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
         aria-label="Remove item"
       >

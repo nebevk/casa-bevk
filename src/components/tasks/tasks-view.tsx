@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useMemo, useOptimistic, useRef, useState, useTransition } from "react";
 import {
   CalendarClock,
   CheckCircle2,
@@ -9,6 +9,7 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
+import { toast } from "sonner";
 import type { Member } from "@/lib/auth/dal";
 import type { TaskRow } from "@/lib/tasks/queries";
 import {
@@ -36,7 +37,28 @@ const formatDue = (due: string) =>
     day: "numeric",
   });
 
-type Mutate = (fn: () => Promise<void> | void) => void;
+type OptimisticAction =
+  | { kind: "toggle"; id: string }
+  | { kind: "delete"; id: string }
+  | { kind: "assign"; id: string; assignee_id: string | null }
+  | { kind: "add"; task: TaskRow };
+
+function applyOptimistic(state: TaskRow[], action: OptimisticAction): TaskRow[] {
+  switch (action.kind) {
+    case "toggle":
+      return state.map((t) =>
+        t.id === action.id ? { ...t, is_done: !t.is_done } : t,
+      );
+    case "delete":
+      return state.filter((t) => t.id !== action.id);
+    case "assign":
+      return state.map((t) =>
+        t.id === action.id ? { ...t, assignee_id: action.assignee_id } : t,
+      );
+    case "add":
+      return [...state, action.task];
+  }
+}
 
 export function TasksView({
   tasks,
@@ -49,6 +71,7 @@ export function TasksView({
 }) {
   const [filter, setFilter] = useState<string>("all");
   const [isPending, startTransition] = useTransition();
+  const [optimisticTasks, optimize] = useOptimistic(tasks, applyOptimistic);
   const formRef = useRef<HTMLFormElement>(null);
 
   const memberById = useMemo(
@@ -56,7 +79,19 @@ export function TasksView({
     [members],
   );
 
-  const filtered = tasks.filter((t) =>
+  // Optimistic update first (instant), then sync to the server in the background.
+  function run(action: OptimisticAction, mutate: () => Promise<void>) {
+    startTransition(async () => {
+      optimize(action);
+      try {
+        await mutate();
+      } catch {
+        toast.error("Couldn't save — please try again.");
+      }
+    });
+  }
+
+  const filtered = optimisticTasks.filter((t) =>
     filter === "all"
       ? true
       : filter === "unassigned"
@@ -73,13 +108,28 @@ export function TasksView({
   ];
 
   function handleAdd(formData: FormData) {
-    startTransition(async () => {
-      await addTask(formData);
-      formRef.current?.reset();
-    });
+    const title = String(formData.get("title") ?? "").trim();
+    if (!title) return;
+    const assigneeRaw = String(formData.get("assignee_id") ?? "");
+    const assignee_id =
+      assigneeRaw && assigneeRaw !== "none" ? assigneeRaw : null;
+    const dueRaw = String(formData.get("due") ?? "").trim();
+    const due_at = dueRaw ? new Date(dueRaw).toISOString() : null;
+    formRef.current?.reset();
+    run(
+      {
+        kind: "add",
+        task: {
+          id: `temp-${crypto.randomUUID()}`,
+          title,
+          due_at,
+          is_done: false,
+          assignee_id,
+        },
+      },
+      () => addTask(formData),
+    );
   }
-
-  const mutate: Mutate = (fn) => startTransition(fn);
 
   return (
     <div className="space-y-6">
@@ -169,7 +219,7 @@ export function TasksView({
                   : null
               }
               members={members}
-              mutate={mutate}
+              run={run}
             />
           ))
         )}
@@ -190,7 +240,7 @@ export function TasksView({
                   : null
               }
               members={members}
-              mutate={mutate}
+              run={run}
             />
           ))}
         </div>
@@ -228,12 +278,12 @@ function TaskItem({
   task,
   member,
   members,
-  mutate,
+  run,
 }: {
   task: TaskRow;
   member: Member | null;
   members: Member[];
-  mutate: Mutate;
+  run: (action: OptimisticAction, mutate: () => Promise<void>) => void;
 }) {
   const overdue =
     !task.is_done &&
@@ -244,7 +294,11 @@ function TaskItem({
     <div className="group flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 shadow-sm">
       <button
         type="button"
-        onClick={() => mutate(() => toggleTask(task.id, !task.is_done))}
+        onClick={() =>
+          run({ kind: "toggle", id: task.id }, () =>
+            toggleTask(task.id, !task.is_done),
+          )
+        }
         className="text-muted-foreground transition-colors hover:text-primary"
         aria-label={task.is_done ? "Mark not done" : "Mark done"}
       >
@@ -294,14 +348,22 @@ function TaskItem({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem
-            onClick={() => mutate(() => setTaskAssignee(task.id, null))}
+            onClick={() =>
+              run({ kind: "assign", id: task.id, assignee_id: null }, () =>
+                setTaskAssignee(task.id, null),
+              )
+            }
           >
             Anyone
           </DropdownMenuItem>
           {members.map((m) => (
             <DropdownMenuItem
               key={m.id}
-              onClick={() => mutate(() => setTaskAssignee(task.id, m.id))}
+              onClick={() =>
+                run({ kind: "assign", id: task.id, assignee_id: m.id }, () =>
+                  setTaskAssignee(task.id, m.id),
+                )
+              }
             >
               {m.name}
             </DropdownMenuItem>
@@ -311,7 +373,9 @@ function TaskItem({
 
       <button
         type="button"
-        onClick={() => mutate(() => deleteTask(task.id))}
+        onClick={() =>
+          run({ kind: "delete", id: task.id }, () => deleteTask(task.id))
+        }
         className="text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
         aria-label="Delete task"
       >
