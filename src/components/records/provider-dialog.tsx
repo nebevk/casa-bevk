@@ -22,7 +22,11 @@ const TYPES = [
   ["internet", "Internet"],
   ["mobile", "Mobile"],
   ["tv", "TV"],
+  ["electricity", "Electricity"],
+  ["gas", "Gas"],
   ["utility", "Utility"],
+  ["upravnik", "Upravnik"],
+  ["komunala", "Komunala"],
   ["insurance", "Insurance"],
   ["other", "Other"],
 ] as const;

@@ -9,7 +9,11 @@ const PROVIDER_TYPES = [
   "internet",
   "mobile",
   "tv",
+  "electricity",
+  "gas",
   "utility",
+  "upravnik",
+  "komunala",
   "insurance",
   "other",
 ] as const;
@@ -182,7 +186,13 @@ export async function addProvider(formData: FormData) {
   const { user, household, supabase } = await authedContext();
   const { error } = await supabase
     .from("providers")
-    .insert({ household_id: household.id, created_by: user.id, ...fields });
+    // provider_type gains electricity/gas/upravnik/komunala in 0004; cast until
+    // database.types.ts is regenerated.
+    .insert({
+      household_id: household.id,
+      created_by: user.id,
+      ...fields,
+    } as never);
   if (error) throw error;
   revalidatePath("/records");
 }
@@ -193,7 +203,7 @@ export async function updateProvider(id: string, formData: FormData) {
   const { supabase } = await authedContext();
   const { error } = await supabase
     .from("providers")
-    .update(fields)
+    .update(fields as never)
     .eq("id", id);
   if (error) throw error;
   revalidatePath("/records");

@@ -3,11 +3,14 @@
 import { useMemo, useState, useTransition } from "react";
 import {
   Box,
+  Building2,
   Car,
   CalendarClock,
+  Flame,
   Home,
   Pencil,
   Plus,
+  Recycle,
   Shield,
   Smartphone,
   Stethoscope,
@@ -44,7 +47,11 @@ const PROVIDER_ICON: Record<string, LucideIcon> = {
   internet: Wifi,
   mobile: Smartphone,
   tv: Tv,
+  electricity: Zap,
+  gas: Flame,
   utility: Zap,
+  upravnik: Building2,
+  komunala: Recycle,
   insurance: Shield,
   other: Box,
 };
