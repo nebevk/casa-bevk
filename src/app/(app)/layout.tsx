@@ -27,7 +27,7 @@ export default async function AppLayout({
   return (
     <RealtimeProvider>
       <div className="flex min-h-svh">
-        <AppSidebar />
+        <AppSidebar email={user.email ?? ""} name={name} />
         <div className="flex min-w-0 flex-1 flex-col">
           <TopBar email={user.email ?? ""} name={name} />
           <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
