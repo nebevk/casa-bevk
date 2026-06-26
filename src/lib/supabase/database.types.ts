@@ -683,6 +683,83 @@ export type Database = {
           },
         ]
       }
+      health_reminders: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          due_on: string
+          household_id: string
+          id: string
+          interval_months: number | null
+          kind: Database["public"]["Enums"]["health_reminder_kind"]
+          member_id: string | null
+          notes: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          due_on: string
+          household_id: string
+          id?: string
+          interval_months?: number | null
+          kind?: Database["public"]["Enums"]["health_reminder_kind"]
+          member_id?: string | null
+          notes?: string | null
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          due_on?: string
+          household_id?: string
+          id?: string
+          interval_months?: number | null
+          kind?: Database["public"]["Enums"]["health_reminder_kind"]
+          member_id?: string | null
+          notes?: string | null
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_reminders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_reminders_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_reminders_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_reminders_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       household_members: {
         Row: {
           created_at: string
@@ -890,6 +967,86 @@ export type Database = {
           },
           {
             foreignKeyName: "maintenance_log_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medical_contacts: {
+        Row: {
+          address: string | null
+          clinic: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          household_id: string
+          id: string
+          kind: Database["public"]["Enums"]["medical_kind"]
+          member_id: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          address?: string | null
+          clinic?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          household_id: string
+          id?: string
+          kind?: Database["public"]["Enums"]["medical_kind"]
+          member_id?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          address?: string | null
+          clinic?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          household_id?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["medical_kind"]
+          member_id?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medical_contacts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_contacts_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_contacts_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_contacts_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -1621,7 +1778,15 @@ export type Database = {
         | "event"
         | "task"
         | "other"
+      health_reminder_kind: "checkup" | "vaccination" | "screening" | "other"
       item_visibility: "personal" | "shared"
+      medical_kind:
+        | "gp"
+        | "dentist"
+        | "pediatrician"
+        | "gynecologist"
+        | "specialist"
+        | "other"
       member_role: "owner" | "member"
       payment_cadence:
         | "daily"
@@ -1637,6 +1802,10 @@ export type Database = {
         | "utility"
         | "insurance"
         | "other"
+        | "electricity"
+        | "gas"
+        | "upravnik"
+        | "komunala"
       recurrence_freq: "none" | "daily" | "weekly" | "monthly" | "yearly"
       reminder_method: "push" | "email"
       task_priority: "low" | "normal" | "high" | "urgent"
@@ -1781,7 +1950,16 @@ export const Constants = {
         "task",
         "other",
       ],
+      health_reminder_kind: ["checkup", "vaccination", "screening", "other"],
       item_visibility: ["personal", "shared"],
+      medical_kind: [
+        "gp",
+        "dentist",
+        "pediatrician",
+        "gynecologist",
+        "specialist",
+        "other",
+      ],
       member_role: ["owner", "member"],
       payment_cadence: [
         "daily",
@@ -1798,6 +1976,10 @@ export const Constants = {
         "utility",
         "insurance",
         "other",
+        "electricity",
+        "gas",
+        "upravnik",
+        "komunala",
       ],
       recurrence_freq: ["none", "daily", "weekly", "monthly", "yearly"],
       reminder_method: ["push", "email"],
@@ -1805,4 +1987,3 @@ export const Constants = {
     },
   },
 } as const
-
