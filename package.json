@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "db:types": "npx -y supabase@latest gen types typescript --linked > src/lib/supabase/database.types.ts",
     "setup:household": "node scripts/setup-household.mjs",
+    "set:household-claim": "node scripts/set-household-claim.mjs",
     "deploy:vercel": "node scripts/deploy-vercel.mjs"
   },
   "dependencies": {

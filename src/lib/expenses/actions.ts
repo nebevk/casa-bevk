@@ -2,14 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getHousehold, getUser } from "@/lib/auth/dal";
+import { getHouseholdId, getUser } from "@/lib/auth/dal";
 import { ensureCategoryId } from "./categories";
 
 async function authedContext() {
-  const [user, household] = await Promise.all([getUser(), getHousehold()]);
-  if (!user || !household) throw new Error("Not authorized");
+  const [user, householdId] = await Promise.all([getUser(), getHouseholdId()]);
+  if (!user || !householdId) throw new Error("Not authorized");
   const supabase = await createClient();
-  return { user, household, supabase };
+  return { user, household: { id: householdId }, supabase };
 }
 
 function str(value: FormDataEntryValue | null): string | null {
@@ -33,7 +33,7 @@ export async function addExpense(formData: FormData) {
     ? await ensureCategoryId(supabase, household.id, categoryName)
     : null;
 
-  await supabase.from("expenses").insert({
+  const { error } = await supabase.from("expenses").insert({
     household_id: household.id,
     category_id,
     paid_by,
@@ -42,6 +42,7 @@ export async function addExpense(formData: FormData) {
     description,
     created_by: user.id,
   });
+  if (error) throw error;
   revalidatePath("/expenses");
   revalidatePath("/budgets");
   revalidatePath("/finances");
@@ -49,10 +50,11 @@ export async function addExpense(formData: FormData) {
 
 export async function deleteExpense(id: string) {
   const { supabase } = await authedContext();
-  await supabase
+  const { error } = await supabase
     .from("expenses")
     .update({ deleted_at: new Date().toISOString() })
     .eq("id", id);
+  if (error) throw error;
   revalidatePath("/expenses");
   revalidatePath("/budgets");
   revalidatePath("/finances");

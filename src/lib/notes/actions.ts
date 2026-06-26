@@ -2,13 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getHousehold, getUser } from "@/lib/auth/dal";
+import { getHouseholdId, getUser } from "@/lib/auth/dal";
 
 async function authedContext() {
-  const [user, household] = await Promise.all([getUser(), getHousehold()]);
-  if (!user || !household) throw new Error("Not authorized");
+  const [user, householdId] = await Promise.all([getUser(), getHouseholdId()]);
+  if (!user || !householdId) throw new Error("Not authorized");
   const supabase = await createClient();
-  return { user, household, supabase };
+  return { user, household: { id: householdId }, supabase };
 }
 
 function readNote(formData: FormData) {
@@ -24,7 +24,7 @@ export async function addNote(formData: FormData) {
   const { title, body, visibility, category } = readNote(formData);
   if (!title && !body) return;
   const { user, household, supabase } = await authedContext();
-  await supabase.from("notes").insert({
+  const { error } = await supabase.from("notes").insert({
     household_id: household.id,
     owner_id: user.id,
     visibility,
@@ -33,30 +33,37 @@ export async function addNote(formData: FormData) {
     category,
     created_by: user.id,
   });
+  if (error) throw error;
   revalidatePath("/notes");
 }
 
 export async function updateNote(id: string, formData: FormData) {
   const { title, body, visibility, category } = readNote(formData);
   const { supabase } = await authedContext();
-  await supabase
+  const { error } = await supabase
     .from("notes")
     .update({ title, body, visibility, category })
     .eq("id", id);
+  if (error) throw error;
   revalidatePath("/notes");
 }
 
 export async function togglePin(id: string, pinned: boolean) {
   const { supabase } = await authedContext();
-  await supabase.from("notes").update({ is_pinned: pinned }).eq("id", id);
+  const { error } = await supabase
+    .from("notes")
+    .update({ is_pinned: pinned })
+    .eq("id", id);
+  if (error) throw error;
   revalidatePath("/notes");
 }
 
 export async function deleteNote(id: string) {
   const { supabase } = await authedContext();
-  await supabase
+  const { error } = await supabase
     .from("notes")
     .update({ deleted_at: new Date().toISOString() })
     .eq("id", id);
+  if (error) throw error;
   revalidatePath("/notes");
 }

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getHousehold, getUser } from "@/lib/auth/dal";
+import { getHouseholdId, getUser } from "@/lib/auth/dal";
 
 export async function updateProfile(formData: FormData) {
   const user = await getUser();
@@ -18,8 +18,8 @@ export async function updateProfile(formData: FormData) {
 }
 
 export async function updateHouseholdSettings(formData: FormData) {
-  const [user, household] = await Promise.all([getUser(), getHousehold()]);
-  if (!user || !household) return;
+  const [user, householdId] = await Promise.all([getUser(), getHouseholdId()]);
+  if (!user || !householdId) return;
   const name = String(formData.get("name") ?? "").trim() || "Our Home";
   const raw = String(formData.get("currency") ?? "EUR")
     .trim()
@@ -31,7 +31,7 @@ export async function updateHouseholdSettings(formData: FormData) {
   await supabase
     .from("household_settings")
     .update({ name, currency })
-    .eq("household_id", household.id);
-  await supabase.from("households").update({ name }).eq("id", household.id);
+    .eq("household_id", householdId);
+  await supabase.from("households").update({ name }).eq("id", householdId);
   revalidatePath("/settings");
 }

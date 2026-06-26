@@ -54,6 +54,25 @@ export const getHousehold = cache(async () => {
   return data ?? null;
 });
 
+/**
+ * Household id for the current user — the fast path used by every write action.
+ *
+ * Reads it from the JWT claim (`app_metadata.household_id`, set once at
+ * provisioning by scripts/set-household-claim.mjs) so there is NO extra DB
+ * round-trip on each mutation. Falls back to a query when the claim isn't
+ * present yet (before/just-after provisioning), so writes keep working either
+ * way. RLS remains the real backstop.
+ */
+export const getHouseholdId = cache(async (): Promise<string | null> => {
+  const user = await getUser();
+  if (!user) return null;
+  const claim = (user.app_metadata as { household_id?: unknown } | undefined)
+    ?.household_id;
+  if (typeof claim === "string" && claim) return claim;
+  const household = await getHousehold();
+  return household?.id ?? null;
+});
+
 export type Member = {
   id: string;
   role: string;

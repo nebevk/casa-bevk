@@ -2,13 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getHousehold, getUser } from "@/lib/auth/dal";
+import { getHouseholdId, getUser } from "@/lib/auth/dal";
 
 async function authedContext() {
-  const [user, household] = await Promise.all([getUser(), getHousehold()]);
-  if (!user || !household) throw new Error("Not authorized");
+  const [user, householdId] = await Promise.all([getUser(), getHouseholdId()]);
+  if (!user || !householdId) throw new Error("Not authorized");
   const supabase = await createClient();
-  return { user, household, supabase };
+  return { user, household: { id: householdId }, supabase };
 }
 
 export async function addShoppingItem(formData: FormData) {
@@ -41,7 +41,7 @@ export async function addShoppingItem(formData: FormData) {
     listId = created.id;
   }
 
-  await supabase.from("shopping_items").insert({
+  const { error } = await supabase.from("shopping_items").insert({
     household_id: household.id,
     list_id: listId,
     name,
@@ -49,37 +49,41 @@ export async function addShoppingItem(formData: FormData) {
     category,
     created_by: user.id,
   });
+  if (error) throw error;
   revalidatePath("/shopping");
 }
 
 export async function toggleShoppingItem(id: string, checked: boolean) {
   const { supabase } = await authedContext();
-  await supabase
+  const { error } = await supabase
     .from("shopping_items")
     .update({
       is_checked: checked,
       checked_at: checked ? new Date().toISOString() : null,
     })
     .eq("id", id);
+  if (error) throw error;
   revalidatePath("/shopping");
 }
 
 export async function deleteShoppingItem(id: string) {
   const { supabase } = await authedContext();
-  await supabase
+  const { error } = await supabase
     .from("shopping_items")
     .update({ deleted_at: new Date().toISOString() })
     .eq("id", id);
+  if (error) throw error;
   revalidatePath("/shopping");
 }
 
 export async function clearCheckedItems() {
   const { household, supabase } = await authedContext();
-  await supabase
+  const { error } = await supabase
     .from("shopping_items")
     .update({ deleted_at: new Date().toISOString() })
     .eq("household_id", household.id)
     .eq("is_checked", true)
     .is("deleted_at", null);
+  if (error) throw error;
   revalidatePath("/shopping");
 }

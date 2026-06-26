@@ -2,15 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getHousehold, getUser } from "@/lib/auth/dal";
+import { getHouseholdId, getUser } from "@/lib/auth/dal";
 
 const FREQS = ["none", "daily", "weekly", "monthly", "yearly"] as const;
 
 async function authedContext() {
-  const [user, household] = await Promise.all([getUser(), getHousehold()]);
-  if (!user || !household) throw new Error("Not authorized");
+  const [user, householdId] = await Promise.all([getUser(), getHouseholdId()]);
+  if (!user || !householdId) throw new Error("Not authorized");
   const supabase = await createClient();
-  return { user, household, supabase };
+  return { user, household: { id: householdId }, supabase };
 }
 
 function str(value: FormDataEntryValue | null): string | null {
@@ -43,7 +43,7 @@ export async function addEvent(formData: FormData) {
   const f = eventFields(formData);
   if (!f.title || !f.starts_at) return;
   const { user, household, supabase } = await authedContext();
-  await supabase.from("calendar_events").insert({
+  const { error } = await supabase.from("calendar_events").insert({
     household_id: household.id,
     created_by: user.id,
     title: f.title,
@@ -55,6 +55,7 @@ export async function addEvent(formData: FormData) {
     location: f.location,
     description: f.description,
   });
+  if (error) throw error;
   revalidatePath("/calendar");
   revalidatePath("/dashboard");
 }
@@ -63,7 +64,7 @@ export async function updateEvent(id: string, formData: FormData) {
   const f = eventFields(formData);
   if (!f.title || !f.starts_at) return;
   const { supabase } = await authedContext();
-  await supabase
+  const { error } = await supabase
     .from("calendar_events")
     .update({
       title: f.title,
@@ -76,13 +77,18 @@ export async function updateEvent(id: string, formData: FormData) {
       description: f.description,
     })
     .eq("id", id);
+  if (error) throw error;
   revalidatePath("/calendar");
   revalidatePath("/dashboard");
 }
 
 export async function deleteEvent(id: string) {
   const { supabase } = await authedContext();
-  await supabase.from("calendar_events").delete().eq("id", id);
+  const { error } = await supabase
+    .from("calendar_events")
+    .delete()
+    .eq("id", id);
+  if (error) throw error;
   revalidatePath("/calendar");
   revalidatePath("/dashboard");
 }
