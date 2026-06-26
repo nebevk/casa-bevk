@@ -50,42 +50,76 @@ function pick<T extends readonly string[]>(
 
 // ---- Assets -----------------------------------------------------------------
 
+/** Build the per-asset `attributes` jsonb from the form (typed per asset kind). */
+function assetAttributes(
+  type: (typeof ASSET_TYPES)[number],
+  formData: FormData,
+): Record<string, string | number> {
+  const attributes: Record<string, string | number> = {};
+  const put = (key: string, value: string | number | null) => {
+    if (value !== null && value !== "") attributes[key] = value;
+  };
+  if (type === "vehicle") {
+    put("make", str(formData.get("make")));
+    put("model", str(formData.get("model")));
+    put("year", num(formData.get("year")));
+    put("plate", str(formData.get("plate")));
+    put("engine", str(formData.get("engine")));
+    put("power", str(formData.get("power")));
+    put("engine_code", str(formData.get("engine_code")));
+    put("gearbox", str(formData.get("gearbox")));
+    put("fuel", str(formData.get("fuel")));
+    put("vin", str(formData.get("vin")));
+    put("current_km", num(formData.get("current_km")));
+    // Slovenia: registracija (registration) + zavarovanje (yearly insurance).
+    put("registration_due", str(formData.get("registration_due")));
+    put("insurance_company", str(formData.get("insurance_company")));
+    put("insurance_amount", num(formData.get("insurance_amount")));
+    put("insurance_due", str(formData.get("insurance_due")));
+    put("notes", str(formData.get("notes")));
+  } else if (type === "property") {
+    put("address", str(formData.get("address")));
+    put("size_m2", num(formData.get("size_m2")));
+    put("notes", str(formData.get("notes")));
+  }
+  return attributes;
+}
+
 export async function addAsset(formData: FormData) {
   const type = pick(ASSET_TYPES, formData.get("type"), "other");
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return;
 
-  const attributes: Record<string, string | number> = {};
-  if (type === "vehicle") {
-    const make = str(formData.get("make"));
-    const model = str(formData.get("model"));
-    const plate = str(formData.get("plate"));
-    const year = num(formData.get("year"));
-    if (make) attributes.make = make;
-    if (model) attributes.model = model;
-    if (plate) attributes.plate = plate;
-    if (year) attributes.year = year;
-  } else if (type === "property") {
-    const address = str(formData.get("address"));
-    const size = num(formData.get("size_m2"));
-    if (address) attributes.address = address;
-    if (size) attributes.size_m2 = size;
-  }
-
   const { user, household, supabase } = await authedContext();
-  await supabase.from("assets").insert({
+  const { error } = await supabase.from("assets").insert({
     household_id: household.id,
     type,
     name,
-    attributes,
+    attributes: assetAttributes(type, formData),
     created_by: user.id,
   });
+  if (error) throw error;
+  revalidatePath("/records");
+}
+
+export async function updateAsset(id: string, formData: FormData) {
+  const type = pick(ASSET_TYPES, formData.get("type"), "other");
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) return;
+
+  const { supabase } = await authedContext();
+  const { error } = await supabase
+    .from("assets")
+    .update({ name, attributes: assetAttributes(type, formData) })
+    .eq("id", id);
+  if (error) throw error;
   revalidatePath("/records");
 }
 
 export async function deleteAsset(id: string) {
   const { supabase } = await authedContext();
-  await supabase.from("assets").delete().eq("id", id);
+  const { error } = await supabase.from("assets").delete().eq("id", id);
+  if (error) throw error;
   revalidatePath("/records");
 }
 
@@ -97,7 +131,7 @@ export async function addMaintenanceEntry(formData: FormData) {
   if (!asset_id || !title) return;
 
   const { user, household, supabase } = await authedContext();
-  await supabase.from("maintenance_log").insert({
+  const { error } = await supabase.from("maintenance_log").insert({
     household_id: household.id,
     asset_id,
     title,
@@ -110,13 +144,20 @@ export async function addMaintenanceEntry(formData: FormData) {
     next_service_on: str(formData.get("next_service_on")),
     created_by: user.id,
   });
+  if (error) throw error;
   revalidatePath("/records");
+  revalidatePath("/dashboard");
 }
 
 export async function deleteMaintenanceEntry(id: string) {
   const { supabase } = await authedContext();
-  await supabase.from("maintenance_log").delete().eq("id", id);
+  const { error } = await supabase
+    .from("maintenance_log")
+    .delete()
+    .eq("id", id);
+  if (error) throw error;
   revalidatePath("/records");
+  revalidatePath("/dashboard");
 }
 
 // ---- Providers --------------------------------------------------------------
@@ -139,9 +180,10 @@ export async function addProvider(formData: FormData) {
   const fields = providerFields(formData);
   if (!fields.name) return;
   const { user, household, supabase } = await authedContext();
-  await supabase
+  const { error } = await supabase
     .from("providers")
     .insert({ household_id: household.id, created_by: user.id, ...fields });
+  if (error) throw error;
   revalidatePath("/records");
 }
 
@@ -149,12 +191,17 @@ export async function updateProvider(id: string, formData: FormData) {
   const fields = providerFields(formData);
   if (!fields.name) return;
   const { supabase } = await authedContext();
-  await supabase.from("providers").update(fields).eq("id", id);
+  const { error } = await supabase
+    .from("providers")
+    .update(fields)
+    .eq("id", id);
+  if (error) throw error;
   revalidatePath("/records");
 }
 
 export async function deleteProvider(id: string) {
   const { supabase } = await authedContext();
-  await supabase.from("providers").delete().eq("id", id);
+  const { error } = await supabase.from("providers").delete().eq("id", id);
+  if (error) throw error;
   revalidatePath("/records");
 }
