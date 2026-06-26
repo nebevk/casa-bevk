@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Link from "next/link";
 import {
   CalendarClock,
@@ -41,27 +42,17 @@ function greeting() {
 }
 
 export default async function DashboardPage() {
-  const [
-    tasks,
-    notes,
-    items,
-    members,
-    profile,
-    verse,
-    events,
-    subscriptions,
-    weather,
-  ] = await Promise.all([
-    getTasks(),
-    getNotes(),
-    getShoppingItems(),
-    getHouseholdMembers(),
-    getProfile(),
-    getDailyVerse(),
-    getEvents(),
-    getSubscriptions(),
-    getWeather(),
-  ]);
+  const [tasks, notes, items, members, profile, verse, events, subscriptions] =
+    await Promise.all([
+      getTasks(),
+      getNotes(),
+      getShoppingItems(),
+      getHouseholdMembers(),
+      getProfile(),
+      getDailyVerse(),
+      getEvents(),
+      getSubscriptions(),
+    ]);
 
   const name = (profile as { display_name?: string } | null)?.display_name;
   const memberName = new Map(members.map((m) => [m.id, m.name] as const));
@@ -107,7 +98,9 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <WeatherCard weather={weather} />
+        <Suspense fallback={<WeatherSkeleton />}>
+          <WeatherSlot />
+        </Suspense>
 
         <Card className="border-primary/15 bg-accent/40">
           <CardContent className="flex h-full items-start gap-3.5 py-5">
@@ -275,5 +268,25 @@ function Panel({
 function Empty({ children }: { children: React.ReactNode }) {
   return (
     <p className="py-6 text-center text-sm text-muted-foreground">{children}</p>
+  );
+}
+
+/** Weather streams in separately so a cold Open-Meteo fetch never blocks paint. */
+async function WeatherSlot() {
+  const weather = await getWeather();
+  return <WeatherCard weather={weather} />;
+}
+
+function WeatherSkeleton() {
+  return (
+    <Card>
+      <CardContent className="flex items-center gap-4 py-5">
+        <div className="size-10 shrink-0 animate-pulse rounded-full bg-muted" />
+        <div className="space-y-2">
+          <div className="h-7 w-16 animate-pulse rounded bg-muted" />
+          <div className="h-3.5 w-40 animate-pulse rounded bg-muted" />
+        </div>
+      </CardContent>
+    </Card>
   );
 }
