@@ -55,6 +55,19 @@ The two structurally-similar list features that prove the full CRUD + realtime p
 - [ ] PWA (manifest, icons, offline shell), perf
 - [ ] Production Supabase + Vercel env, backups, observability
 
+## Backlog — integrations (queued)
+
+- [ ] **Moj elektro consumption integration** ("the cool one") — pull electricity
+      metering data (kWh, 15-min + daily) from the official Moj elektro REST API
+      (`api.informatika.si/mojelektro/v1`, `X-API-TOKEN`; docs at
+      `docs.informatika.si/mojelektro/api`). Build an "Energija" view: usage trend
+      + estimated cost from the tariff. Needs a token generated in the owner's Moj
+      elektro profile. Note: GEN-I itself has **no** public API — log the € invoice
+      amounts as expenses (manual now, bank feed later); gas metering has no national API.
+- [ ] **Google Calendar sync** — between the family calendar and Google Calendar.
+      OAuth client secret already obtained (keep it out of the repo — store as env
+      vars). Decide: one-way ICS subscribe (simple) vs. full two-way OAuth sync.
+
 ---
 
 ## Open questions for the owner
