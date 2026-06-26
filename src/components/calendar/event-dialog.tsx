@@ -4,6 +4,7 @@ import { useState, useTransition, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import type { CalendarEvent } from "@/lib/calendar/recurrence";
 import { addEvent, deleteEvent, updateEvent } from "@/lib/calendar/actions";
+import { todayDateInput } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -117,7 +118,11 @@ export function EventDialog({
               label="Date"
               type="date"
               required
-              defaultValue={event ? toDateInput(event.starts_at) : (defaultDate ?? "")}
+              defaultValue={
+                event
+                  ? toDateInput(event.starts_at)
+                  : (defaultDate ?? todayDateInput())
+              }
             />
             <div className="flex items-end">
               <Chip active={allDay} onClick={() => setAllDay((v) => !v)}>

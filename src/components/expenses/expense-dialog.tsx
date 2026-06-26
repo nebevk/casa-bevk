@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import type { Member } from "@/lib/auth/dal";
 import { addExpense } from "@/lib/expenses/actions";
 import { DEFAULT_EXPENSE_CATEGORIES } from "@/lib/expenses/constants";
+import { todayDateInput } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -124,7 +125,12 @@ export function ExpenseDialog({
               <Label htmlFor="exp-date" className="text-xs text-muted-foreground">
                 Date
               </Label>
-              <Input id="exp-date" name="occurred_on" type="date" />
+              <Input
+                id="exp-date"
+                name="occurred_on"
+                type="date"
+                defaultValue={todayDateInput()}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="exp-note" className="text-xs text-muted-foreground">

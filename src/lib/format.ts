@@ -25,3 +25,10 @@ export function daysUntil(date: string | null | undefined): number | null {
   if (!date) return null;
   return Math.ceil((new Date(date).getTime() - Date.now()) / 86_400_000);
 }
+
+/** Today's date as a local `YYYY-MM-DD` string, for <input type="date"> defaults. */
+export function todayDateInput(): string {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
