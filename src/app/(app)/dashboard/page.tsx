@@ -29,6 +29,7 @@ import { WeatherCard } from "@/components/dashboard/weather-card";
 import { getAssets, getMaintenanceEntries } from "@/lib/records/queries";
 import { getHealthReminders } from "@/lib/medical/queries";
 import { daysUntil, formatDate, formatMoney } from "@/lib/format";
+import { ShelfArt } from "@/components/cozy";
 import { cn } from "@/lib/utils";
 import {
   Card,
@@ -105,9 +106,9 @@ export default async function DashboardPage() {
     const reg = a.attributes.registration_due;
     const ins = a.attributes.insurance_due;
     if (typeof reg === "string")
-      obligations.push({ id: `${a.id}-reg`, label: `${a.name} — registracija`, date: reg, icon: Car });
+      obligations.push({ id: `${a.id}-reg`, label: `${a.name} · registracija`, date: reg, icon: Car });
     if (typeof ins === "string")
-      obligations.push({ id: `${a.id}-ins`, label: `${a.name} — zavarovanje`, date: ins, icon: Shield });
+      obligations.push({ id: `${a.id}-ins`, label: `${a.name} · zavarovanje`, date: ins, icon: Shield });
   }
   for (const e of maintenance) {
     if (e.next_service_on)
@@ -130,17 +131,20 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="flex items-center gap-2 font-heading text-2xl font-semibold tracking-tight md:text-3xl">
-          <span>
-            {greeting()}
-            {name ? `, ${name}` : ""}
-          </span>
-          <Leaf className="size-6 shrink-0 text-primary" />
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Here’s your household at a glance.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="flex items-center gap-2 font-heading text-2xl font-semibold tracking-tight md:text-3xl">
+            <span>
+              {greeting()}
+              {name ? `, ${name}` : ""}
+            </span>
+            <Leaf className="size-6 shrink-0 text-primary" />
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Here’s your household at a glance.
+          </p>
+        </div>
+        <ShelfArt className="mt-1 hidden h-12 w-28 shrink-0 text-primary/25 sm:block" />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -156,7 +160,7 @@ export default async function DashboardPage() {
                 “{verse.text}”
               </p>
               <p className="mt-2 text-xs font-medium text-muted-foreground">
-                — {verse.reference}
+                {verse.reference}
                 {verse.version ? ` · ${verse.version}` : ""}
               </p>
             </div>
@@ -188,7 +192,7 @@ export default async function DashboardPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel title="Due today" description="Tasks due today or overdue.">
           {dueToday.length === 0 ? (
-            <Empty>Nothing due today — you’re all caught up.</Empty>
+            <Empty>Nothing due today. You’re all caught up.</Empty>
           ) : (
             <ul className="space-y-2.5">
               {dueToday.slice(0, 6).map((task) => (
@@ -260,7 +264,7 @@ export default async function DashboardPage() {
 
         <Panel
           title="Renewals & reminders"
-          description="Car, home &amp; health — coming up."
+          description="Car, home & health, coming up."
           icon={CalendarClock}
         >
           {upcomingObligations.length === 0 ? (

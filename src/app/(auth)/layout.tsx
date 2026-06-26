@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { getUser } from "@/lib/auth/dal";
 import { LogoImage } from "@/components/brand-mark";
+import { VineArt } from "@/components/cozy";
 
 export default async function AuthLayout({
   children,
@@ -31,6 +32,9 @@ export default async function AuthLayout({
           <p className="mt-3 text-sm text-muted-foreground">
             Your private family hub
           </p>
+          <div className="mx-auto mt-4 w-44 text-primary/25">
+            <VineArt className="h-6 w-full" />
+          </div>
         </div>
         {children}
       </div>

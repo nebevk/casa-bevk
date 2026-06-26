@@ -67,7 +67,7 @@ export function MedicalContactDialog({
           await updateMedicalContact(contact.id, formData);
         else await addMedicalContact(formData);
       } catch {
-        toast.error("Couldn't save — please try again.");
+        toast.error("Couldn't save, please try again.");
       }
     });
   }

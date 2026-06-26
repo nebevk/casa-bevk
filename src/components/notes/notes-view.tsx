@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { Pin, Plus, Search, StickyNote, Trash2 } from "lucide-react";
+import { Pin, Plus, Search, Trash2 } from "lucide-react";
 import type { NoteRow } from "@/lib/notes/queries";
 import { deleteNote, togglePin } from "@/lib/notes/actions";
 import { NoteDialog } from "./note-dialog";
+import { BooksArt, CozyEmpty } from "@/components/cozy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -110,14 +111,11 @@ export function NotesView({ notes }: { notes: NoteRow[] }) {
       )}
 
       {filtered.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border bg-card/50 py-16 text-center">
-          <StickyNote className="mx-auto size-8 text-muted-foreground/60" />
-          <p className="mt-2 text-sm text-muted-foreground">
-            {notes.length === 0
-              ? "No notes yet — add one with “New note” or the button in the corner."
-              : "No notes match your filters."}
-          </p>
-        </div>
+        <CozyEmpty art={<BooksArt />}>
+          {notes.length === 0
+            ? "No notes yet. Add one with “New note” or the button in the corner."
+            : "No notes match your filters."}
+        </CozyEmpty>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((note) => (

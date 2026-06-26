@@ -27,6 +27,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { CozyEmpty, PlantArt } from "@/components/cozy";
 import { cn } from "@/lib/utils";
 
 const initials = (name: string) => name.trim().slice(0, 2).toUpperCase();
@@ -86,7 +87,7 @@ export function TasksView({
       try {
         await mutate();
       } catch {
-        toast.error("Couldn't save — please try again.");
+        toast.error("Couldn't save, please try again.");
       }
     });
   }
@@ -138,7 +139,7 @@ export function TasksView({
           To-Do
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Shared tasks — assign them to{" "}
+          Shared tasks. Assign them to{" "}
           {members.map((m) => m.name).join(" or ") || "anyone"}.
         </p>
       </div>
@@ -205,9 +206,9 @@ export function TasksView({
 
       <div className="space-y-2">
         {open.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-border bg-card/50 py-10 text-center text-sm text-muted-foreground">
-            Nothing to do — add a task above.
-          </p>
+          <CozyEmpty art={<PlantArt />}>
+            All caught up. A little space to grow into.
+          </CozyEmpty>
         ) : (
           open.map((task) => (
             <TaskItem

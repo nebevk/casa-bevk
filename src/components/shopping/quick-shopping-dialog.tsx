@@ -30,7 +30,7 @@ export function QuickShoppingDialog({
       try {
         await addShoppingItem(formData);
       } catch {
-        toast.error("Couldn't add item — please try again.");
+        toast.error("Couldn't add item, please try again.");
       }
     });
   }

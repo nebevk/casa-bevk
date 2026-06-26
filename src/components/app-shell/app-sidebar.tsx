@@ -1,6 +1,7 @@
 import { LogoImage } from "@/components/brand-mark";
 import { NavLinks } from "./nav-links";
 import { UserMenu } from "./user-menu";
+import { VineArt } from "@/components/cozy";
 
 export function AppSidebar({
   email,
@@ -26,6 +27,9 @@ export function AppSidebar({
       </div>
       <div className="flex-1 overflow-y-auto px-3 pt-2 pb-4">
         <NavLinks />
+      </div>
+      <div className="px-5 pb-1 text-sidebar-foreground/15">
+        <VineArt className="h-5 w-full" />
       </div>
       <div className="border-t border-sidebar-border p-2">
         <UserMenu email={email} name={name} variant="full" />

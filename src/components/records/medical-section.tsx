@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition, type ReactNode } from "react";
 import {
   CheckCircle2,
   ExternalLink,
@@ -8,9 +8,7 @@ import {
   Plus,
   Repeat,
   Stethoscope,
-  Syringe,
   Trash2,
-  type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Member } from "@/lib/auth/dal";
@@ -26,6 +24,7 @@ import {
 import { daysUntil, formatDate } from "@/lib/format";
 import { MedicalContactDialog } from "./medical-contact-dialog";
 import { HealthReminderDialog } from "./health-reminder-dialog";
+import { BooksArt, CozyEmpty, PlantArt } from "@/components/cozy";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -70,7 +69,7 @@ export function MedicalSection({
       try {
         await fn();
       } catch {
-        toast.error("Couldn't update — please try again.");
+        toast.error("Couldn't update, please try again.");
       }
     });
   }
@@ -113,7 +112,7 @@ export function MedicalSection({
         }
       >
         {contacts.length === 0 ? (
-          <Empty icon={Stethoscope} text="Add your doctors and dentists." />
+          <Empty art={<BooksArt />} text="Add your doctors and dentists." />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             {contacts.map((c) => (
@@ -176,10 +175,7 @@ export function MedicalSection({
         }
       >
         {reminders.length === 0 ? (
-          <Empty
-            icon={Syringe}
-            text="Add checkup & vaccination reminders."
-          />
+          <Empty art={<PlantArt />} text="Add checkup & vaccination reminders." />
         ) : (
           <ul className="space-y-2">
             {reminders.map((r) => {
@@ -297,11 +293,6 @@ function Section({
   );
 }
 
-function Empty({ icon: Icon, text }: { icon: LucideIcon; text: string }) {
-  return (
-    <div className="rounded-lg border border-dashed border-border bg-card/50 py-10 text-center">
-      <Icon className="mx-auto size-7 text-muted-foreground/60" />
-      <p className="mt-2 text-sm text-muted-foreground">{text}</p>
-    </div>
-  );
+function Empty({ art, text }: { art: ReactNode; text: string }) {
+  return <CozyEmpty art={art}>{text}</CozyEmpty>;
 }

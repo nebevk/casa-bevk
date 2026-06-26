@@ -63,7 +63,7 @@ export function AssetDialog({
         if (isEdit && asset) await updateAsset(asset.id, formData);
         else await addAsset(formData);
       } catch {
-        toast.error("Couldn't save — please try again.");
+        toast.error("Couldn't save, please try again.");
       }
     });
   }

@@ -54,7 +54,7 @@ export function NoteDialog({
         if (isEdit && note) await updateNote(note.id, formData);
         else await addNote(formData);
       } catch {
-        toast.error("Couldn't save note — please try again.");
+        toast.error("Couldn't save note, please try again.");
       }
     });
   }
@@ -112,7 +112,7 @@ export function NoteDialog({
             name="category"
             list="note-categories"
             defaultValue={note?.category ?? ""}
-            placeholder="Category (optional) — e.g. Recipes, Ideas, Travel"
+            placeholder="Category (optional), e.g. Recipes, Ideas, Travel"
             autoComplete="off"
           />
           {categories.length > 0 && (

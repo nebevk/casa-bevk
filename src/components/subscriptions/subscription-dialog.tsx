@@ -90,7 +90,7 @@ export function SubscriptionDialog({
             {isEdit ? "Edit subscription" : "Add subscription"}
           </DialogTitle>
           <DialogDescription>
-            Recurring payments — bills, subscriptions, memberships.
+            Recurring payments: bills, subscriptions, memberships.
           </DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-3">

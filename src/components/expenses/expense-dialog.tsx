@@ -57,7 +57,7 @@ export function ExpenseDialog({
       try {
         await addExpense(formData);
       } catch {
-        toast.error("Couldn't add expense — please try again.");
+        toast.error("Couldn't add expense, please try again.");
       }
     });
   }
@@ -69,7 +69,7 @@ export function ExpenseDialog({
         <DialogHeader>
           <DialogTitle className="font-heading">Add expense</DialogTitle>
           <DialogDescription>
-            Jot down a purchase — amount and a category is enough.
+            Jot down a purchase. Amount and a category is enough.
           </DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">

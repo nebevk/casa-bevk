@@ -13,7 +13,7 @@ import {
 
 export const APP_NAME = "Casa Bevk";
 export const APP_DESCRIPTION =
-  "A private family hub — shared lists, notes, a family calendar, and household finances.";
+  "A private family hub: shared lists, notes, a family calendar, and household finances.";
 
 /**
  * The two household members. Casa Bevk is invite-only (no public sign-up), so

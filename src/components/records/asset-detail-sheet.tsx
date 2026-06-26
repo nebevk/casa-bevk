@@ -56,7 +56,7 @@ export function AssetDetailSheet({
       try {
         await addMaintenanceEntry(formData);
       } catch {
-        toast.error("Couldn't add entry — please try again.");
+        toast.error("Couldn't add entry, please try again.");
       }
     });
   }
@@ -210,7 +210,7 @@ export function AssetDetailSheet({
 
           {entries.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              No entries yet — log a service or inspection above.
+              No entries yet. Log a service or inspection above.
             </p>
           ) : (
             <ul className="space-y-2">
@@ -249,7 +249,7 @@ export function AssetDetailSheet({
                             try {
                               await deleteMaintenanceEntry(entry.id);
                             } catch {
-                              toast.error("Couldn't delete — try again.");
+                              toast.error("Couldn't delete, try again.");
                             }
                           })
                         }

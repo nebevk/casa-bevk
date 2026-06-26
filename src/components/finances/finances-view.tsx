@@ -163,7 +163,7 @@ export function FinancesView({
         <CardContent>
           {expenses.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              No expenses yet — add one or use the quick button in the corner.
+              No expenses yet. Add one or use the quick button in the corner.
             </p>
           ) : (
             <div className="space-y-2">

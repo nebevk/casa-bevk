@@ -70,7 +70,7 @@ export function HealthReminderDialog({
           await updateHealthReminder(reminder.id, formData);
         else await addHealthReminder(formData);
       } catch {
-        toast.error("Couldn't save — please try again.");
+        toast.error("Couldn't save, please try again.");
       }
     });
   }
@@ -100,7 +100,7 @@ export function HealthReminderDialog({
             name="title"
             label="What"
             required
-            placeholder="e.g. Zobozdravnik — kontrola"
+            placeholder="e.g. Zobozdravnik kontrola"
             defaultValue={reminder?.title ?? ""}
           />
 

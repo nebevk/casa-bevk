@@ -97,7 +97,7 @@ export function EventDialog({
         if (isEdit && event) await updateEvent(event.id, formData);
         else await addEvent(formData);
       } catch {
-        toast.error("Couldn't save event — please try again.");
+        toast.error("Couldn't save event, please try again.");
       }
     });
   }
@@ -197,7 +197,7 @@ export function EventDialog({
                     try {
                       await deleteEvent(event.id);
                     } catch {
-                      toast.error("Couldn't delete event — please try again.");
+                      toast.error("Couldn't delete event, please try again.");
                     }
                   });
                 }}

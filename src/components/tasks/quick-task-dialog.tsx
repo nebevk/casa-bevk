@@ -40,7 +40,7 @@ export function QuickTaskDialog({
       try {
         await addTask(formData);
       } catch {
-        toast.error("Couldn't add task — please try again.");
+        toast.error("Couldn't add task, please try again.");
       }
     });
   }

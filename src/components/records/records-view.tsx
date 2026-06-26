@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition, type ReactNode } from "react";
 import {
   Box,
   Building2,
@@ -38,6 +38,7 @@ import { AssetDialog } from "./asset-dialog";
 import { ProviderDialog } from "./provider-dialog";
 import { AssetDetailSheet } from "./asset-detail-sheet";
 import { MedicalSection } from "./medical-section";
+import { BooksArt, CozyEmpty, PlantArt } from "@/components/cozy";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -99,7 +100,7 @@ export function RecordsView({
       try {
         await fn();
       } catch {
-        toast.error("Couldn't update — please try again.");
+        toast.error("Couldn't update, please try again.");
       }
     });
   }
@@ -129,7 +130,7 @@ export function RecordsView({
           Records
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Cars, the home, and medical — info, logs &amp; reminders in one place.
+          Cars, the home, and medical. Info, logs &amp; reminders in one place.
         </p>
       </div>
 
@@ -170,7 +171,7 @@ export function RecordsView({
             />
           </div>
           {cars.length === 0 ? (
-            <EmptyState icon={Car} text="No cars yet — add your first vehicle." />
+            <EmptyState art={<PlantArt />} text="No cars yet. Add your first vehicle." />
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
               {cars.map((car) => {
@@ -249,7 +250,7 @@ export function RecordsView({
             }
           >
             {homeAssets.length === 0 ? (
-              <EmptyState icon={Home} text="Add your apartment or house." />
+              <EmptyState art={<PlantArt />} text="Add your apartment or house." />
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {homeAssets.map((asset) => {
@@ -351,7 +352,7 @@ export function RecordsView({
           >
             {providers.length === 0 ? (
               <EmptyState
-                icon={Wifi}
+                art={<BooksArt />}
                 text="Internet, mobile, TV, electricity, gas, upravnik, komunala…"
               />
             ) : (
@@ -504,11 +505,6 @@ function Section({
   );
 }
 
-function EmptyState({ icon: Icon, text }: { icon: LucideIcon; text: string }) {
-  return (
-    <div className="rounded-lg border border-dashed border-border bg-card/50 py-12 text-center">
-      <Icon className="mx-auto size-8 text-muted-foreground/60" />
-      <p className="mt-2 text-sm text-muted-foreground">{text}</p>
-    </div>
-  );
+function EmptyState({ art, text }: { art: ReactNode; text: string }) {
+  return <CozyEmpty art={art}>{text}</CozyEmpty>;
 }

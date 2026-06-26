@@ -85,7 +85,7 @@ export function SubscriptionsView({
         <div className="rounded-lg border border-dashed border-border bg-card/50 py-16 text-center">
           <Repeat className="mx-auto size-8 text-muted-foreground/60" />
           <p className="mt-2 text-sm text-muted-foreground">
-            No subscriptions yet — add internet, streaming, insurance…
+            No subscriptions yet. Add internet, streaming, insurance…
           </p>
         </div>
       ) : (

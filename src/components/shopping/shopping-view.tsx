@@ -12,6 +12,7 @@ import {
 } from "@/lib/shopping/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CozyEmpty, MugArt } from "@/components/cozy";
 import { cn } from "@/lib/utils";
 
 type OptimisticAction =
@@ -50,7 +51,7 @@ export function ShoppingView({ items }: { items: ShoppingItemRow[] }) {
       try {
         await mutate();
       } catch {
-        toast.error("Couldn't save — please try again.");
+        toast.error("Couldn't save, please try again.");
       }
     });
   }
@@ -88,7 +89,7 @@ export function ShoppingView({ items }: { items: ShoppingItemRow[] }) {
             Shopping
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Your shared list — check items off as you go.
+            Your shared list. Check items off as you go.
           </p>
         </div>
         {checked.length > 0 && (
@@ -140,9 +141,9 @@ export function ShoppingView({ items }: { items: ShoppingItemRow[] }) {
 
       <div className="space-y-2">
         {open.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-border bg-card/50 py-10 text-center text-sm text-muted-foreground">
-            Your list is empty — add something above.
-          </p>
+          <CozyEmpty art={<MugArt />}>
+            Your list is empty. Add something above.
+          </CozyEmpty>
         ) : (
           open.map((item) => (
             <ShoppingItem key={item.id} item={item} run={run} />
