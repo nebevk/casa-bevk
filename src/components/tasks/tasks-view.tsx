@@ -6,6 +6,8 @@ import {
   CheckCircle2,
   Circle,
   Loader2,
+  Lock,
+  LockOpen,
   Plus,
   Trash2,
 } from "lucide-react";
@@ -16,6 +18,7 @@ import {
   addTask,
   deleteTask,
   setTaskAssignee,
+  setTaskVisibility,
   toggleTask,
 } from "@/lib/tasks/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -42,6 +45,7 @@ type OptimisticAction =
   | { kind: "toggle"; id: string }
   | { kind: "delete"; id: string }
   | { kind: "assign"; id: string; assignee_id: string | null }
+  | { kind: "visibility"; id: string; visibility: string }
   | { kind: "add"; task: TaskRow };
 
 function applyOptimistic(state: TaskRow[], action: OptimisticAction): TaskRow[] {
@@ -55,6 +59,10 @@ function applyOptimistic(state: TaskRow[], action: OptimisticAction): TaskRow[] 
     case "assign":
       return state.map((t) =>
         t.id === action.id ? { ...t, assignee_id: action.assignee_id } : t,
+      );
+    case "visibility":
+      return state.map((t) =>
+        t.id === action.id ? { ...t, visibility: action.visibility } : t,
       );
     case "add":
       return [...state, action.task];
@@ -116,6 +124,8 @@ export function TasksView({
       assigneeRaw && assigneeRaw !== "none" ? assigneeRaw : null;
     const dueRaw = String(formData.get("due") ?? "").trim();
     const due_at = dueRaw ? new Date(dueRaw).toISOString() : null;
+    const visibility =
+      formData.get("visibility") === "personal" ? "personal" : "shared";
     formRef.current?.reset();
     run(
       {
@@ -126,6 +136,8 @@ export function TasksView({
           due_at,
           is_done: false,
           assignee_id,
+          visibility,
+          owner_id: currentUserId,
         },
       },
       () => addTask(formData),
@@ -171,6 +183,7 @@ export function TasksView({
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="text-xs text-muted-foreground">Assign to</span>
           <RadioChip
+            name="assignee_id"
             value="none"
             label="Anyone"
             defaultChecked={!currentUserId}
@@ -178,11 +191,17 @@ export function TasksView({
           {members.map((m) => (
             <RadioChip
               key={m.id}
+              name="assignee_id"
               value={m.id}
               label={m.name}
               defaultChecked={currentUserId === m.id}
             />
           ))}
+        </div>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className="text-xs text-muted-foreground">Visibility</span>
+          <RadioChip name="visibility" value="shared" label="Shared" defaultChecked />
+          <RadioChip name="visibility" value="personal" label="Personal" />
         </div>
       </form>
 
@@ -221,6 +240,7 @@ export function TasksView({
               }
               members={members}
               run={run}
+              currentUserId={currentUserId}
             />
           ))
         )}
@@ -242,6 +262,7 @@ export function TasksView({
               }
               members={members}
               run={run}
+              currentUserId={currentUserId}
             />
           ))}
         </div>
@@ -251,10 +272,12 @@ export function TasksView({
 }
 
 function RadioChip({
+  name,
   value,
   label,
   defaultChecked,
 }: {
+  name: string;
   value: string;
   label: string;
   defaultChecked?: boolean;
@@ -263,7 +286,7 @@ function RadioChip({
     <label className="cursor-pointer">
       <input
         type="radio"
-        name="assignee_id"
+        name={name}
         value={value}
         defaultChecked={defaultChecked}
         className="peer sr-only"
@@ -280,16 +303,21 @@ function TaskItem({
   member,
   members,
   run,
+  currentUserId,
 }: {
   task: TaskRow;
   member: Member | null;
   members: Member[];
   run: (action: OptimisticAction, mutate: () => Promise<void>) => void;
+  currentUserId: string | null;
 }) {
   const overdue =
     !task.is_done &&
     !!task.due_at &&
     new Date(task.due_at) < new Date(new Date().toDateString());
+  const isPersonal = task.visibility === "personal";
+  // Only the owner may flip visibility (RLS + guard enforce it server-side too).
+  const canPrivatize = task.owner_id != null && task.owner_id === currentUserId;
 
   return (
     <div className="group flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 shadow-sm">
@@ -318,6 +346,37 @@ function TaskItem({
       >
         {task.title}
       </span>
+
+      {canPrivatize && (
+        <button
+          type="button"
+          onClick={() =>
+            run(
+              {
+                kind: "visibility",
+                id: task.id,
+                visibility: isPersonal ? "shared" : "personal",
+              },
+              () =>
+                setTaskVisibility(task.id, isPersonal ? "shared" : "personal"),
+            )
+          }
+          className={cn(
+            "inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium transition-colors",
+            isPersonal
+              ? "bg-primary/10 text-primary"
+              : "bg-muted text-muted-foreground hover:bg-muted/70",
+          )}
+          title={
+            isPersonal
+              ? "Personal: only you can see this. Click to share."
+              : "Shared. Click to make personal."
+          }
+        >
+          {isPersonal ? <Lock className="size-3" /> : <LockOpen className="size-3" />}
+          {isPersonal ? "Personal" : "Shared"}
+        </button>
+      )}
 
       {task.due_at && (
         <span

@@ -20,15 +20,37 @@ export async function addTask(formData: FormData) {
     assigneeRaw && assigneeRaw !== "none" ? assigneeRaw : null;
   const dueRaw = String(formData.get("due") ?? "").trim();
   const due_at = dueRaw ? new Date(dueRaw).toISOString() : null;
+  const visibility =
+    formData.get("visibility") === "personal" ? "personal" : "shared";
 
   const { user, household, supabase } = await authedContext();
-  const { error } = await supabase.from("tasks").insert({
+  const base = {
     household_id: household.id,
     title,
     assignee_id,
     due_at,
     created_by: user.id,
-  });
+  };
+  const { error } = await supabase
+    .from("tasks")
+    .insert({ ...base, visibility, owner_id: user.id } as never);
+  if (error) {
+    // visibility/owner_id arrive in migration 0005; fall back to a shared task.
+    const { error: fallbackError } = await supabase.from("tasks").insert(base);
+    if (fallbackError) throw fallbackError;
+  }
+  revalidatePath("/tasks");
+}
+
+export async function setTaskVisibility(
+  id: string,
+  visibility: "personal" | "shared",
+) {
+  const { supabase } = await authedContext();
+  const { error } = await supabase
+    .from("tasks")
+    .update({ visibility } as never)
+    .eq("id", id);
   if (error) throw error;
   revalidatePath("/tasks");
 }

@@ -30,12 +30,15 @@ export function QuickTaskDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const [assignee, setAssignee] = useState(currentUserId ?? "none");
+  const [visibility, setVisibility] = useState<"shared" | "personal">("shared");
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(formData: FormData) {
     formData.set("assignee_id", assignee);
+    formData.set("visibility", visibility);
     onOpenChange(false);
     setAssignee(currentUserId ?? "none");
+    setVisibility("shared");
     startTransition(async () => {
       try {
         await addTask(formData);
@@ -50,7 +53,9 @@ export function QuickTaskDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-heading">New task</DialogTitle>
-          <DialogDescription>Add a shared to-do.</DialogDescription>
+          <DialogDescription>
+            A to-do, shared with the household or just for you.
+          </DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
@@ -79,6 +84,23 @@ export function QuickTaskDialog({
                   {m.name}
                 </Chip>
               ))}
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Visibility</Label>
+            <div className="flex flex-wrap gap-1.5">
+              <Chip
+                active={visibility === "shared"}
+                onClick={() => setVisibility("shared")}
+              >
+                Shared
+              </Chip>
+              <Chip
+                active={visibility === "personal"}
+                onClick={() => setVisibility("personal")}
+              >
+                Personal
+              </Chip>
             </div>
           </div>
           <DialogFooter>
