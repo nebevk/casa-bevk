@@ -3,13 +3,10 @@
 import { useMemo, useOptimistic, useRef, useState, useTransition } from "react";
 import {
   CalendarClock,
-  CheckCircle2,
-  Circle,
   Loader2,
   Lock,
-  LockOpen,
+  MoreVertical,
   Plus,
-  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Member } from "@/lib/auth/dal";
@@ -18,8 +15,8 @@ import {
   addTask,
   deleteTask,
   setTaskAssignee,
+  setTaskStatus,
   setTaskVisibility,
-  toggleTask,
 } from "@/lib/tasks/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -28,6 +25,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CozyEmpty, PlantArt } from "@/components/cozy";
@@ -41,19 +40,22 @@ const formatDue = (due: string) =>
     day: "numeric",
   });
 
+type Status = "todo" | "in_progress" | "done";
+const COLUMNS: { key: Status; label: string }[] = [
+  { key: "todo", label: "To do" },
+  { key: "in_progress", label: "In progress" },
+  { key: "done", label: "Done" },
+];
+
 type OptimisticAction =
-  | { kind: "toggle"; id: string }
   | { kind: "delete"; id: string }
   | { kind: "assign"; id: string; assignee_id: string | null }
   | { kind: "visibility"; id: string; visibility: string }
+  | { kind: "status"; id: string; status: Status }
   | { kind: "add"; task: TaskRow };
 
 function applyOptimistic(state: TaskRow[], action: OptimisticAction): TaskRow[] {
   switch (action.kind) {
-    case "toggle":
-      return state.map((t) =>
-        t.id === action.id ? { ...t, is_done: !t.is_done } : t,
-      );
     case "delete":
       return state.filter((t) => t.id !== action.id);
     case "assign":
@@ -63,6 +65,12 @@ function applyOptimistic(state: TaskRow[], action: OptimisticAction): TaskRow[] 
     case "visibility":
       return state.map((t) =>
         t.id === action.id ? { ...t, visibility: action.visibility } : t,
+      );
+    case "status":
+      return state.map((t) =>
+        t.id === action.id
+          ? { ...t, status: action.status, is_done: action.status === "done" }
+          : t,
       );
     case "add":
       return [...state, action.task];
@@ -79,6 +87,7 @@ export function TasksView({
   currentUserId: string | null;
 }) {
   const [filter, setFilter] = useState<string>("all");
+  const [dragOver, setDragOver] = useState<Status | null>(null);
   const [isPending, startTransition] = useTransition();
   const [optimisticTasks, optimize] = useOptimistic(tasks, applyOptimistic);
   const formRef = useRef<HTMLFormElement>(null);
@@ -100,6 +109,13 @@ export function TasksView({
     });
   }
 
+  function moveTo(task: TaskRow, status: Status) {
+    if ((task.status as Status) === status) return;
+    run({ kind: "status", id: task.id, status }, () =>
+      setTaskStatus(task.id, status),
+    );
+  }
+
   const filtered = optimisticTasks.filter((t) =>
     filter === "all"
       ? true
@@ -107,8 +123,6 @@ export function TasksView({
         ? !t.assignee_id
         : t.assignee_id === filter,
   );
-  const open = filtered.filter((t) => !t.is_done);
-  const done = filtered.filter((t) => t.is_done);
 
   const filterChips = [
     { key: "all", label: "All" },
@@ -138,6 +152,7 @@ export function TasksView({
           assignee_id,
           visibility,
           owner_id: currentUserId,
+          status: "todo",
         },
       },
       () => addTask(formData),
@@ -151,8 +166,7 @@ export function TasksView({
           To-Do
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Shared tasks. Assign them to{" "}
-          {members.map((m) => m.name).join(" or ") || "anyone"}.
+          Drag a card between columns, or use its menu to move it.
         </p>
       </div>
 
@@ -169,12 +183,7 @@ export function TasksView({
             autoComplete="off"
             className="flex-1"
           />
-          <Input
-            name="due"
-            type="date"
-            aria-label="Due date"
-            className="sm:w-40"
-          />
+          <Input name="due" type="date" aria-label="Due date" className="sm:w-40" />
           <Button type="submit" disabled={isPending}>
             {isPending ? <Loader2 className="animate-spin" /> : <Plus />}
             Add
@@ -223,50 +232,70 @@ export function TasksView({
         ))}
       </div>
 
-      <div className="space-y-2">
-        {open.length === 0 ? (
-          <CozyEmpty art={<PlantArt />}>
-            All caught up. A little space to grow into.
-          </CozyEmpty>
-        ) : (
-          open.map((task) => (
-            <TaskItem
-              key={task.id}
-              task={task}
-              member={
-                task.assignee_id
-                  ? (memberById.get(task.assignee_id) ?? null)
-                  : null
+      <div className="grid gap-4 md:grid-cols-3">
+        {COLUMNS.map((col) => {
+          const colTasks = filtered.filter((t) => t.status === col.key);
+          return (
+            <div
+              key={col.key}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOver(col.key);
+              }}
+              onDragLeave={() =>
+                setDragOver((c) => (c === col.key ? null : c))
               }
-              members={members}
-              run={run}
-              currentUserId={currentUserId}
-            />
-          ))
-        )}
+              onDrop={(e) => {
+                e.preventDefault();
+                const id = e.dataTransfer.getData("text/plain");
+                const task = optimisticTasks.find((t) => t.id === id);
+                if (task) moveTo(task, col.key);
+                setDragOver(null);
+              }}
+              className={cn(
+                "flex flex-col rounded-xl border border-border bg-muted/30 p-2 transition-colors",
+                dragOver === col.key && "border-primary/40 bg-primary/5 ring-1 ring-primary/30",
+              )}
+            >
+              <div className="flex items-center justify-between px-2 py-1.5">
+                <span className="text-sm font-medium">{col.label}</span>
+                <span className="rounded-full bg-background px-1.5 text-xs text-muted-foreground tabular-nums">
+                  {colTasks.length}
+                </span>
+              </div>
+              <div className="min-h-16 space-y-2">
+                {colTasks.length === 0 ? (
+                  col.key === "todo" ? (
+                    <CozyEmpty art={<PlantArt />} className="py-8">
+                      All caught up.
+                    </CozyEmpty>
+                  ) : (
+                    <p className="rounded-lg border border-dashed border-border/70 py-6 text-center text-xs text-muted-foreground/70">
+                      Drop tasks here
+                    </p>
+                  )
+                ) : (
+                  colTasks.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      member={
+                        task.assignee_id
+                          ? (memberById.get(task.assignee_id) ?? null)
+                          : null
+                      }
+                      members={members}
+                      currentUserId={currentUserId}
+                      run={run}
+                      moveTo={moveTo}
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
-
-      {done.length > 0 && (
-        <div className="space-y-2">
-          <h2 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Done ({done.length})
-          </h2>
-          {done.map((task) => (
-            <TaskItem
-              key={task.id}
-              task={task}
-              member={
-                task.assignee_id
-                  ? (memberById.get(task.assignee_id) ?? null)
-                  : null
-              }
-              members={members}
-              run={run}
-              currentUserId={currentUserId}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -298,149 +327,154 @@ function RadioChip({
   );
 }
 
-function TaskItem({
+function TaskCard({
   task,
   member,
   members,
-  run,
   currentUserId,
+  run,
+  moveTo,
 }: {
   task: TaskRow;
   member: Member | null;
   members: Member[];
-  run: (action: OptimisticAction, mutate: () => Promise<void>) => void;
   currentUserId: string | null;
+  run: (action: OptimisticAction, mutate: () => Promise<void>) => void;
+  moveTo: (task: TaskRow, status: Status) => void;
 }) {
+  const isDone = task.status === "done";
+  const isPersonal = task.visibility === "personal";
+  const canPrivatize = task.owner_id != null && task.owner_id === currentUserId;
   const overdue =
-    !task.is_done &&
+    !isDone &&
     !!task.due_at &&
     new Date(task.due_at) < new Date(new Date().toDateString());
-  const isPersonal = task.visibility === "personal";
-  // Only the owner may flip visibility (RLS + guard enforce it server-side too).
-  const canPrivatize = task.owner_id != null && task.owner_id === currentUserId;
 
   return (
-    <div className="group flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 shadow-sm">
-      <button
-        type="button"
-        onClick={() =>
-          run({ kind: "toggle", id: task.id }, () =>
-            toggleTask(task.id, !task.is_done),
-          )
-        }
-        className="text-muted-foreground transition-colors hover:text-primary"
-        aria-label={task.is_done ? "Mark not done" : "Mark done"}
-      >
-        {task.is_done ? (
-          <CheckCircle2 className="size-5 text-primary" />
-        ) : (
-          <Circle className="size-5" />
-        )}
-      </button>
-
-      <span
-        className={cn(
-          "flex-1 text-sm",
-          task.is_done && "text-muted-foreground line-through",
-        )}
-      >
-        {task.title}
-      </span>
-
-      {canPrivatize && (
-        <button
-          type="button"
-          onClick={() =>
-            run(
-              {
-                kind: "visibility",
-                id: task.id,
-                visibility: isPersonal ? "shared" : "personal",
-              },
-              () =>
-                setTaskVisibility(task.id, isPersonal ? "shared" : "personal"),
-            )
-          }
+    <div
+      draggable
+      onDragStart={(e) => e.dataTransfer.setData("text/plain", task.id)}
+      className="group cursor-grab rounded-lg border border-border bg-card p-2.5 shadow-sm transition-colors hover:border-primary/40 active:cursor-grabbing"
+    >
+      <div className="flex items-start justify-between gap-1.5">
+        <p
           className={cn(
-            "inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium transition-colors",
-            isPersonal
-              ? "bg-primary/10 text-primary"
-              : "bg-muted text-muted-foreground hover:bg-muted/70",
-          )}
-          title={
-            isPersonal
-              ? "Personal: only you can see this. Click to share."
-              : "Shared. Click to make personal."
-          }
-        >
-          {isPersonal ? <Lock className="size-3" /> : <LockOpen className="size-3" />}
-          {isPersonal ? "Personal" : "Shared"}
-        </button>
-      )}
-
-      {task.due_at && (
-        <span
-          className={cn(
-            "hidden items-center gap-1 text-xs sm:inline-flex",
-            overdue ? "text-destructive" : "text-muted-foreground",
+            "text-sm",
+            isDone && "text-muted-foreground line-through",
           )}
         >
-          <CalendarClock className="size-3.5" />
-          {formatDue(task.due_at)}
-        </span>
-      )}
-
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button type="button" aria-label="Assign task" className="shrink-0">
-            {member ? (
-              <Avatar className="size-7">
-                <AvatarFallback className="bg-primary/15 text-[10px] font-semibold text-primary">
-                  {initials(member.name)}
-                </AvatarFallback>
-              </Avatar>
-            ) : (
-              <span className="grid size-7 place-items-center rounded-full border border-dashed border-border text-muted-foreground">
-                <Plus className="size-3.5" />
-              </span>
-            )}
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            onClick={() =>
-              run({ kind: "assign", id: task.id, assignee_id: null }, () =>
-                setTaskAssignee(task.id, null),
-              )
-            }
-          >
-            Anyone
-          </DropdownMenuItem>
-          {members.map((m) => (
+          {task.title}
+        </p>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label="Task menu"
+              className="shrink-0 text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-foreground"
+            >
+              <MoreVertical className="size-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuLabel>Move to</DropdownMenuLabel>
+            {COLUMNS.map((c) => (
+              <DropdownMenuItem
+                key={c.key}
+                disabled={task.status === c.key}
+                onClick={() => moveTo(task, c.key)}
+              >
+                {c.label}
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Assign to</DropdownMenuLabel>
             <DropdownMenuItem
-              key={m.id}
               onClick={() =>
-                run({ kind: "assign", id: task.id, assignee_id: m.id }, () =>
-                  setTaskAssignee(task.id, m.id),
+                run({ kind: "assign", id: task.id, assignee_id: null }, () =>
+                  setTaskAssignee(task.id, null),
                 )
               }
             >
-              {m.name}
+              Anyone
             </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+            {members.map((m) => (
+              <DropdownMenuItem
+                key={m.id}
+                onClick={() =>
+                  run({ kind: "assign", id: task.id, assignee_id: m.id }, () =>
+                    setTaskAssignee(task.id, m.id),
+                  )
+                }
+              >
+                {m.name}
+              </DropdownMenuItem>
+            ))}
+            {canPrivatize && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() =>
+                    run(
+                      {
+                        kind: "visibility",
+                        id: task.id,
+                        visibility: isPersonal ? "shared" : "personal",
+                      },
+                      () =>
+                        setTaskVisibility(
+                          task.id,
+                          isPersonal ? "shared" : "personal",
+                        ),
+                    )
+                  }
+                >
+                  {isPersonal ? "Make shared" : "Make personal"}
+                </DropdownMenuItem>
+              </>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() =>
+                run({ kind: "delete", id: task.id }, () => deleteTask(task.id))
+              }
+            >
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
-      <button
-        type="button"
-        onClick={() =>
-          run({ kind: "delete", id: task.id }, () => deleteTask(task.id))
-        }
-        className="text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
-        aria-label="Delete task"
-      >
-        <Trash2 className="size-4" />
-      </button>
+      <div className="mt-2 flex items-center gap-2">
+        {task.due_at && (
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 text-xs",
+              overdue ? "text-destructive" : "text-muted-foreground",
+            )}
+          >
+            <CalendarClock className="size-3.5" />
+            {formatDue(task.due_at)}
+          </span>
+        )}
+        {isPersonal && (
+          <span
+            className="inline-flex items-center gap-1 text-xs text-primary"
+            title="Personal: only you can see this"
+          >
+            <Lock className="size-3" />
+            Personal
+          </span>
+        )}
+        <span className="flex-1" />
+        {member && (
+          <Avatar className="size-6">
+            <AvatarFallback className="bg-primary/15 text-[10px] font-semibold text-primary">
+              {initials(member.name)}
+            </AvatarFallback>
+          </Avatar>
+        )}
+      </div>
     </div>
   );
 }

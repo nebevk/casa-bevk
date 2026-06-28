@@ -55,6 +55,29 @@ export async function setTaskVisibility(
   revalidatePath("/tasks");
 }
 
+export async function setTaskStatus(
+  id: string,
+  status: "todo" | "in_progress" | "done",
+) {
+  const isDone = status === "done";
+  const doneAt = isDone ? new Date().toISOString() : null;
+  const { supabase } = await authedContext();
+  const { error } = await supabase
+    .from("tasks")
+    .update({ status, is_done: isDone, done_at: doneAt } as never)
+    .eq("id", id);
+  if (error) {
+    // status column arrives in migration 0006; keep is_done in sync meanwhile.
+    const { error: fallbackError } = await supabase
+      .from("tasks")
+      .update({ is_done: isDone, done_at: doneAt })
+      .eq("id", id);
+    if (fallbackError) throw fallbackError;
+  }
+  revalidatePath("/tasks");
+  revalidatePath("/dashboard");
+}
+
 export async function toggleTask(id: string, isDone: boolean) {
   const { supabase } = await authedContext();
   const { error } = await supabase

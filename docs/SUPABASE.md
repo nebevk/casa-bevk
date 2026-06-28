@@ -15,9 +15,10 @@ sign-up is disabled and exactly two accounts are pre-provisioned.
 The schema + RLS are the source of truth in `supabase/migrations/`. Applied on
 the remote project through `0004_records_medical` (medical_contacts,
 health_reminders, and the extended `provider_type`). **`0005_task_visibility.sql`
-(tasks become personal/shared with owner-only RLS) is pending; apply it via the
-Supabase MCP.** Regenerate types after new migrations: `pnpm db:types` (or
-Supabase MCP `generate_typescript_types` if the CLI is not linked).
+(personal/shared tasks) and `0006_task_status.sql` (kanban todo/in_progress/done)
+are pending; apply them in order via the Supabase MCP.** Regenerate types after
+new migrations: `pnpm db:types` (or Supabase MCP `generate_typescript_types` if
+the CLI is not linked).
 
 Two ways to apply **new** migrations:
 

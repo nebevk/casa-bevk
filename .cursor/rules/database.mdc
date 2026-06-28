@@ -55,7 +55,8 @@ applied through `0003_member_budgets`; types in `src/lib/supabase/database.types
 
 - **Identity:** profiles, households, household_members, household_settings, user_settings
 - **Lists:** todo_lists, tasks (personal/shared via `visibility` + `owner_id`,
-  owner-only RLS + `guard_tasks_update`, added in `0005`), shopping_lists, shopping_items
+  owner-only RLS + `guard_tasks_update` in `0005`; kanban `status`
+  todo/in_progress/done in `0006`, kept in sync with `is_done`), shopping_lists, shopping_items
 - **Notes:** notes (personal/shared via `visibility`; free-text `category` added in `0002_notes_category.sql`)
 - **Calendar:** calendar_events, event_reminders (per-user)
 - **Money:** expense_categories, expenses, budgets (per-month per-category; optional
