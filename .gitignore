@@ -51,6 +51,11 @@ next-env.d.ts
 # cursor — mcp.json may contain access tokens; commit mcp.example.json instead
 .cursor/mcp.json
 
+# google sheets MCP (credentials + OAuth tokens)
+.google-sheet-mcp.json
+google-sheets-credentials.json
+credentials.json
+
 # supabase (local CLI artifacts)
 /supabase/.temp/
 /supabase/.branches/

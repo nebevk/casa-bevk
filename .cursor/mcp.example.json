@@ -5,6 +5,10 @@
     },
     "vercel": {
       "url": "https://mcp.vercel.com"
+    },
+    "google-sheets": {
+      "command": "npx",
+      "args": ["-y", "google-sheet-mcp"]
     }
   }
 }
