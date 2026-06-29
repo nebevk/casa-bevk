@@ -106,7 +106,7 @@ export function CalendarView({
           <button
             type="button"
             onClick={() => shift(-1)}
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted"
+            className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
             aria-label="Previous month"
           >
             <ChevronLeft className="size-4" />
@@ -114,7 +114,7 @@ export function CalendarView({
           <button
             type="button"
             onClick={() => shift(1)}
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted"
+            className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
             aria-label="Next month"
           >
             <ChevronRight className="size-4" />
@@ -132,7 +132,7 @@ export function CalendarView({
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-border bg-card">
+      <div className="hidden overflow-hidden rounded-lg border border-border bg-card sm:block">
         <div className="grid grid-cols-7 border-b border-border bg-muted/40 text-center text-xs font-medium text-muted-foreground">
           {WEEKDAYS.map((d) => (
             <div key={d} className="py-2">
@@ -201,6 +201,70 @@ export function CalendarView({
             );
           })}
         </div>
+      </div>
+
+      {/* Mobile agenda — full-width rows so event titles are readable on a phone */}
+      <div className="space-y-2 sm:hidden">
+        {(() => {
+          const monthDays = days.filter((d) => d.getMonth() === cursor.m);
+          const hasAny = monthDays.some(
+            (d) => (byDay.get(keyOf(d))?.length ?? 0) > 0 || holidays[keyOf(d)],
+          );
+          if (!hasAny)
+            return (
+              <p className="rounded-lg border border-dashed border-border/70 py-10 text-center text-sm text-muted-foreground">
+                Nothing planned this month. Use “New event” to add something.
+              </p>
+            );
+          return monthDays.map((d) => {
+            const k = keyOf(d);
+            const dayOcc = byDay.get(k) ?? [];
+            const holiday = holidays[k];
+            if (dayOcc.length === 0 && !holiday) return null;
+            const isToday = k === todayKey;
+            return (
+              <div key={k} className="rounded-lg border border-border bg-card p-3">
+                <div className="mb-2 flex items-center gap-2">
+                  <span
+                    className={cn(
+                      "inline-flex size-7 items-center justify-center rounded-full text-sm font-medium",
+                      isToday && "bg-primary text-primary-foreground",
+                    )}
+                  >
+                    {d.getDate()}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {d.toLocaleDateString(undefined, { weekday: "long" })}
+                  </span>
+                </div>
+                {holiday && (
+                  <div className="mb-1 rounded bg-accent/70 px-2 py-1 text-xs font-medium text-accent-foreground">
+                    {holiday}
+                  </div>
+                )}
+                <div className="space-y-1.5">
+                  {dayOcc.map((o, j) => (
+                    <button
+                      key={`${o.event.id}-${j}`}
+                      type="button"
+                      onClick={() => setEditing(o.event)}
+                      className="flex min-h-11 w-full items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-left text-sm text-primary hover:bg-primary/20"
+                    >
+                      {!o.event.all_day && (
+                        <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                          {pad(o.start.getHours())}:{pad(o.start.getMinutes())}
+                        </span>
+                      )}
+                      <span className="min-w-0 flex-1 truncate font-medium">
+                        {o.event.title}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          });
+        })()}
       </div>
 
       {addDate && (

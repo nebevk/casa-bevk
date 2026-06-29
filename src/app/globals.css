@@ -164,6 +164,12 @@
       22px 22px;
     background-attachment: fixed;
   }
+  /* `fixed` attachment janks/repaints on iOS Safari scroll — pin to scroll on touch. */
+  @media (pointer: coarse) {
+    body {
+      background-attachment: scroll;
+    }
+  }
   html {
     @apply font-sans antialiased;
   }
@@ -175,5 +181,29 @@
     font-family: var(--font-heading), var(--font-sans), ui-sans-serif, system-ui,
       sans-serif;
     letter-spacing: -0.01em;
+  }
+}
+
+@layer components {
+  /*
+   * Row/card action control. On touch devices (no hover) it stays fully
+   * visible and tappable; on mouse/trackpad it fades in on hover, keeping the
+   * desktop UI tidy. Replaces the bare `opacity-0 group-hover:opacity-100`
+   * pattern, which was permanently invisible (and so unusable) on phones.
+   */
+  .reveal-hover {
+    opacity: 1;
+    transition: opacity 150ms ease;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .reveal-hover {
+      opacity: 0;
+    }
+    .group:hover .reveal-hover,
+    .reveal-hover:hover,
+    .reveal-hover:focus-visible,
+    .reveal-hover:focus-within {
+      opacity: 1;
+    }
   }
 }

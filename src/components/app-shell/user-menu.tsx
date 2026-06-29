@@ -51,7 +51,7 @@ export function UserMenu({
             <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
           </Button>
         ) : (
-          <Button variant="ghost" size="icon" className="rounded-full">
+          <Button variant="ghost" size="icon" className="size-11 rounded-full">
             <Avatar className="size-8">
               <AvatarFallback className="bg-primary/15 text-xs font-semibold text-primary">
                 {initials}

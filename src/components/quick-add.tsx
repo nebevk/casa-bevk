@@ -51,7 +51,14 @@ export function QuickAdd({
 
   return (
     <>
-      <div className="fixed right-5 bottom-5 z-40 flex flex-col items-end gap-3 md:right-8 md:bottom-8">
+      {open && (
+        <div
+          aria-hidden
+          onClick={() => setOpen(false)}
+          className="fixed inset-0 z-30"
+        />
+      )}
+      <div className="fixed right-5 bottom-[calc(1.25rem+env(safe-area-inset-bottom))] z-40 flex flex-col items-end gap-3 md:right-8 md:bottom-8">
         {open &&
           actions.map((a) => (
             <Action

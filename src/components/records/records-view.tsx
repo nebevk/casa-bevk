@@ -195,7 +195,7 @@ export function RecordsView({
                           e.stopPropagation();
                           mutate(() => deleteAsset(car.id));
                         }}
-                        className="text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
+                        className="reveal-hover -m-1 rounded-md p-1 text-muted-foreground hover:text-destructive"
                         aria-label="Delete car"
                       >
                         <Trash2 className="size-4" />
@@ -272,7 +272,7 @@ export function RecordsView({
                             e.stopPropagation();
                             mutate(() => deleteAsset(asset.id));
                           }}
-                          className="text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
+                          className="reveal-hover -m-1 rounded-md p-1 text-muted-foreground hover:text-destructive"
                           aria-label="Delete"
                         >
                           <Trash2 className="size-4" />
@@ -391,7 +391,7 @@ export function RecordsView({
                           <button
                             type="button"
                             onClick={() => mutate(() => deleteProvider(provider.id))}
-                            className="text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
+                            className="reveal-hover -m-1 rounded-md p-1 text-muted-foreground hover:text-destructive"
                             aria-label="Delete provider"
                           >
                             <Trash2 className="size-4" />

@@ -207,8 +207,10 @@ function BudgetRow({
   return (
     <div className="rounded-lg border border-border p-3">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-medium">{row.name}</span>
-        <div className="flex items-center gap-3">
+        <span className="min-w-0 flex-1 truncate text-sm font-medium">
+          {row.name}
+        </span>
+        <div className="flex shrink-0 items-center gap-3">
           <span className="text-xs text-muted-foreground tabular-nums">
             {formatMoney(row.spent)}
             {row.budget > 0 && ` / ${formatMoney(row.budget)}`}
@@ -228,7 +230,7 @@ function BudgetRow({
               min="0"
               step="1"
               placeholder="Plan"
-              className="h-8 w-24 pl-5 text-sm"
+              className="h-9 w-24 pl-5 text-base md:text-sm"
               aria-label={`Plan for ${row.name}`}
             />
           </div>
@@ -296,7 +298,7 @@ function ExpenseItem({
       <button
         type="button"
         onClick={() => startTransition(() => deleteExpense(expense.id))}
-        className="shrink-0 text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
+        className="shrink-0 reveal-hover -m-1 rounded-md p-1 text-muted-foreground hover:text-destructive"
         aria-label="Delete expense"
       >
         <Trash2 className="size-4" />

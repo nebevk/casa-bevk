@@ -206,7 +206,8 @@ export function TasksView({
           To-Do
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Drag a card between columns, or use its menu to move it.
+          Tap a card&rsquo;s menu to move it between columns (or drag on a
+          computer).
         </p>
       </div>
 
@@ -306,7 +307,7 @@ export function TasksView({
                       onClick={() =>
                         run({ kind: "archiveDone" }, () => archiveDoneTasks())
                       }
-                      className="text-muted-foreground transition-colors hover:text-foreground"
+                      className="-m-1 inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
                       aria-label="Archive all done"
                       title="Archive all done"
                     >
@@ -326,7 +327,7 @@ export function TasksView({
                     </CozyEmpty>
                   ) : (
                     <p className="rounded-lg border border-dashed border-border/70 py-6 text-center text-xs text-muted-foreground/70">
-                      Drop tasks here
+                      Nothing here yet
                     </p>
                   )
                 ) : (
@@ -390,7 +391,7 @@ export function TasksView({
                         unarchiveTask(task.id),
                       )
                     }
-                    className="text-muted-foreground transition-colors hover:text-foreground"
+                    className="inline-flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     aria-label="Restore"
                     title="Restore"
                   >
@@ -403,7 +404,7 @@ export function TasksView({
                         deleteTask(task.id),
                       )
                     }
-                    className="text-muted-foreground transition-colors hover:text-destructive"
+                    className="inline-flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                     aria-label="Delete"
                     title="Delete"
                   >
@@ -494,7 +495,7 @@ function TaskCard({
             <button
               type="button"
               aria-label="Task menu"
-              className="shrink-0 text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-foreground"
+              className="reveal-hover -m-2 inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
             >
               <MoreVertical className="size-4" />
             </button>

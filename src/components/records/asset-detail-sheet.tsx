@@ -253,7 +253,7 @@ export function AssetDetailSheet({
                             }
                           })
                         }
-                        className="text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
+                        className="reveal-hover -m-1 rounded-md p-1 text-muted-foreground hover:text-destructive"
                         aria-label="Delete entry"
                       >
                         <Trash2 className="size-4" />

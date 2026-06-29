@@ -206,7 +206,7 @@ function NoteCard({
             type="button"
             onClick={() => mutate(() => deleteNote(note.id))}
             aria-label="Delete note"
-            className="text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
+            className="reveal-hover -m-1 rounded-md p-1 text-muted-foreground hover:text-destructive"
           >
             <Trash2 className="size-4" />
           </button>

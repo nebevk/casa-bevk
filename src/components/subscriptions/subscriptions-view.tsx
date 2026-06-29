@@ -152,7 +152,7 @@ export function SubscriptionsView({
                   <button
                     type="button"
                     onClick={() => mutate(() => deleteSubscription(s.id))}
-                    className="rounded-md p-1.5 text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
+                    className="reveal-hover rounded-md p-1.5 text-muted-foreground hover:text-destructive"
                     aria-label="Delete"
                   >
                     <Trash2 className="size-4" />

@@ -140,7 +140,7 @@ export function MedicalSection({
                     <button
                       type="button"
                       onClick={() => mutate(() => deleteMedicalContact(c.id))}
-                      className="text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
+                      className="reveal-hover -m-1 rounded-md p-1 text-muted-foreground hover:text-destructive"
                       aria-label="Delete"
                     >
                       <Trash2 className="size-4" />
@@ -235,7 +235,7 @@ export function MedicalSection({
                     <button
                       type="button"
                       onClick={() => mutate(() => deleteHealthReminder(r.id))}
-                      className="text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
+                      className="reveal-hover -m-1 rounded-md p-1 text-muted-foreground hover:text-destructive"
                       aria-label="Delete"
                     >
                       <Trash2 className="size-4" />

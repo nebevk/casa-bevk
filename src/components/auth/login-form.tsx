@@ -19,10 +19,9 @@ export function LoginForm() {
 
   function quickPick(memberEmail: string) {
     setEmail(memberEmail);
-    // jump straight to the password field for a fast sign-in
-    requestAnimationFrame(() => {
-      (document.getElementById("password") as HTMLInputElement | null)?.focus();
-    });
+    // Focus synchronously, inside the tap gesture, so iOS opens the keyboard
+    // (a deferred focus via rAF/timeout loses the user-gesture and won't).
+    (document.getElementById("password") as HTMLInputElement | null)?.focus();
   }
 
   return (
@@ -103,7 +102,7 @@ export function LoginForm() {
       <button
         type="button"
         onClick={() => setMode(mode === "password" ? "magic" : "password")}
-        className="block w-full text-center text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+        className="block w-full py-2 text-center text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
       >
         {mode === "password"
           ? "Email me a magic link instead"
