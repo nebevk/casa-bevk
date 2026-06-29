@@ -13,7 +13,7 @@ Source of truth: `supabase/migrations/`. Postgres + RLS is the **entire** securi
 model for this private two-user app.
 
 **Remote project:** `casa-bevk` — ref `bqahklmyziowboicwwjj` (eu-central-1). Schema
-applied through `0006_task_status` (`0007_task_archive` pending); types in
+applied through `0007_task_archive` (`0008_storage_rls` pending); types in
 `src/lib/supabase/database.types.ts`.
 
 ## Applying migrations (Supabase MCP)
@@ -75,8 +75,11 @@ applied through `0006_task_status` (`0007_task_archive` pending); types in
   both), health_reminders (checkups/vaccinations; `due_on`, optional `interval_months`,
   `completed_at`; `kind` checkup/vaccination/screening/other)
 - **Future/AI seams (created, NOT wired):** attachments, extracted_bill_data,
-  note_embeddings (`vector(1536)`). A `storage.objects` RLS template is commented at
-  the end of the migration.
+  note_embeddings (`vector(1536)`). `0008_storage_rls.sql` activates the private
+  `casa-bevk` bucket + `storage.objects` RLS (first path segment = household_id).
+  Note: extracted_bill_data / note_embeddings are currently household-scoped only
+  (no owner predicate) — make them owner-aware before wiring if they should be
+  private to one member.
 
 ## Realtime publication
 

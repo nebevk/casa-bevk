@@ -18,13 +18,15 @@ export const APP_DESCRIPTION =
 /**
  * The two household members. Casa Bevk is invite-only (no public sign-up), so
  * these are the only accounts that exist. Surfaced as quick-login chips so
- * logging in is one tap + password.
+ * logging in is one tap + password. Only `key`/`name` live here (client-safe);
+ * the real email addresses are resolved server-side in lib/auth/members.ts so
+ * they never ship in the public login bundle.
  */
-export type HouseholdMember = { name: string; email: string };
+export type HouseholdMember = { key: string; name: string };
 
 export const HOUSEHOLD_MEMBERS: HouseholdMember[] = [
-  { name: "Eva", email: "eva.demsar1@gmail.com" },
-  { name: "Nejc", email: "ne.bevk@gmail.com" },
+  { key: "eva", name: "Eva" },
+  { key: "nejc", name: "Nejc" },
 ];
 
 export type NavItem = {

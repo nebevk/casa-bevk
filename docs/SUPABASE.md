@@ -13,11 +13,13 @@ sign-up is disabled and exactly two accounts are pre-provisioned.
 ## 2. Apply the schema
 
 The schema + RLS are the source of truth in `supabase/migrations/`. Applied on
-the remote project through `0006_task_status.sql` (personal/shared tasks in
-`0005`, kanban todo/in_progress/done in `0006`). **`0007_task_archive.sql`
-(archive done tasks via `archived_at`) is pending; apply it via the Supabase
-MCP.** Regenerate types after new migrations: `pnpm db:types` (or Supabase MCP
-`generate_typescript_types` if the CLI is not linked).
+the remote project through `0007_task_archive.sql` (personal/shared tasks in
+`0005`, kanban status in `0006`, archive via `archived_at` in `0007`).
+**`0008_storage_rls.sql` (private `casa-bevk` bucket + `storage.objects` RLS,
+keyed on the first path segment = household_id) is pending; apply it via the
+Supabase MCP before any file-upload feature ships.** Regenerate types after new
+migrations: `pnpm db:types` (or Supabase MCP `generate_typescript_types` if the
+CLI is not linked).
 
 Two ways to apply **new** migrations:
 

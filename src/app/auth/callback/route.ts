@@ -6,10 +6,15 @@ import { createClient } from "@/lib/supabase/server";
  * then forwards to the app. (Sign-up is disabled, so only the two existing
  * accounts ever reach here.)
  */
+/** Only allow internal, single-slash relative paths (blocks //evil.com, /\evil.com). */
+function safeNext(value: string | null): string {
+  return value && /^\/(?![/\\])/.test(value) ? value : "/dashboard";
+}
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/dashboard";
+  const next = safeNext(searchParams.get("next"));
 
   if (code) {
     const supabase = await createClient();
