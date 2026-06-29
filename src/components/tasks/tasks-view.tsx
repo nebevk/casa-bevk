@@ -18,6 +18,7 @@ import {
   addTask,
   archiveDoneTasks,
   archiveTask,
+  clearArchivedTasks,
   deleteTask,
   setTaskAssignee,
   setTaskStatus,
@@ -61,6 +62,7 @@ type OptimisticAction =
   | { kind: "archive"; id: string }
   | { kind: "unarchive"; id: string }
   | { kind: "archiveDone" }
+  | { kind: "clearArchived" }
   | { kind: "add"; task: TaskRow };
 
 function applyOptimistic(state: TaskRow[], action: OptimisticAction): TaskRow[] {
@@ -93,6 +95,8 @@ function applyOptimistic(state: TaskRow[], action: OptimisticAction): TaskRow[] 
       return state.map((t) =>
         t.status === "done" && !t.archived ? { ...t, archived: true } : t,
       );
+    case "clearArchived":
+      return state.filter((t) => !t.archived);
     case "add":
       return [...state, action.task];
   }
@@ -136,6 +140,17 @@ export function TasksView({
     run({ kind: "status", id: task.id, status }, () =>
       setTaskStatus(task.id, status),
     );
+  }
+
+  function handleClearArchived(count: number) {
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm(
+        `Clear all ${count} archived ${count === 1 ? "task" : "tasks"}? This removes them from the list.`,
+      )
+    )
+      return;
+    run({ kind: "clearArchived" }, () => clearArchivedTasks());
   }
 
   const filtered = optimisticTasks.filter((t) =>
@@ -339,14 +354,25 @@ export function TasksView({
 
       {archivedTasks.length > 0 && (
         <div className="space-y-2">
-          <button
-            type="button"
-            onClick={() => setShowArchived((v) => !v)}
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <Archive className="size-4" />
-            {showArchived ? "Hide" : "Show"} archived ({archivedTasks.length})
-          </button>
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setShowArchived((v) => !v)}
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Archive className="size-4" />
+              {showArchived ? "Hide" : "Show"} archived ({archivedTasks.length})
+            </button>
+            {showArchived && (
+              <button
+                type="button"
+                onClick={() => handleClearArchived(archivedTasks.length)}
+                className="text-xs text-muted-foreground transition-colors hover:text-destructive"
+              >
+                Clear all
+              </button>
+            )}
+          </div>
           {showArchived && (
             <ul className="space-y-2">
               {archivedTasks.map((task) => (
@@ -386,6 +412,11 @@ export function TasksView({
                 </li>
               ))}
             </ul>
+          )}
+          {showArchived && (
+            <p className="text-xs text-muted-foreground/80">
+              Tasks done over 30 days ago are archived automatically.
+            </p>
           )}
         </div>
       )}

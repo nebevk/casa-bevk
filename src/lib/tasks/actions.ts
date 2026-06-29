@@ -112,6 +112,19 @@ export async function archiveDoneTasks() {
   revalidatePath("/tasks");
 }
 
+/** Clear the archive: soft-delete every archived task in the household. */
+export async function clearArchivedTasks() {
+  const { household, supabase } = await authedContext();
+  const { error } = await supabase
+    .from("tasks")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("household_id", household.id)
+    .not("archived_at", "is", null)
+    .is("deleted_at", null);
+  if (error) throw error;
+  revalidatePath("/tasks");
+}
+
 export async function toggleTask(id: string, isDone: boolean) {
   const { supabase } = await authedContext();
   const { error } = await supabase
