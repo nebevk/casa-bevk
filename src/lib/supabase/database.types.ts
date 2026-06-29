@@ -1549,6 +1549,7 @@ export type Database = {
       }
       tasks: {
         Row: {
+          archived_at: string | null
           assignee_id: string | null
           created_at: string
           created_by: string | null
@@ -1570,6 +1571,7 @@ export type Database = {
           visibility: Database["public"]["Enums"]["item_visibility"]
         }
         Insert: {
+          archived_at?: string | null
           assignee_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -1591,6 +1593,7 @@ export type Database = {
           visibility?: Database["public"]["Enums"]["item_visibility"]
         }
         Update: {
+          archived_at?: string | null
           assignee_id?: string | null
           created_at?: string
           created_by?: string | null
