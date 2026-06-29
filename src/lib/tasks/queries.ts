@@ -12,6 +12,7 @@ export type TaskRow = {
   visibility: string;
   owner_id: string | null;
   status: string;
+  archived: boolean;
 };
 
 /** Active (non-deleted) household tasks, open first then by due date. */
@@ -36,5 +37,6 @@ export async function getTasks(): Promise<TaskRow[]> {
     visibility: (t as { visibility?: string }).visibility ?? "shared",
     owner_id: (t as { owner_id?: string | null }).owner_id ?? null,
     status: (t as { status?: string }).status ?? (t.is_done ? "done" : "todo"),
+    archived: Boolean((t as { archived_at?: string | null }).archived_at),
   }));
 }

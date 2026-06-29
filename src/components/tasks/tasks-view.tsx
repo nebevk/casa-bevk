@@ -2,21 +2,27 @@
 
 import { useMemo, useOptimistic, useRef, useState, useTransition } from "react";
 import {
+  Archive,
+  ArchiveRestore,
   CalendarClock,
   Loader2,
   Lock,
   MoreVertical,
   Plus,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Member } from "@/lib/auth/dal";
 import type { TaskRow } from "@/lib/tasks/queries";
 import {
   addTask,
+  archiveDoneTasks,
+  archiveTask,
   deleteTask,
   setTaskAssignee,
   setTaskStatus,
   setTaskVisibility,
+  unarchiveTask,
 } from "@/lib/tasks/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -52,6 +58,9 @@ type OptimisticAction =
   | { kind: "assign"; id: string; assignee_id: string | null }
   | { kind: "visibility"; id: string; visibility: string }
   | { kind: "status"; id: string; status: Status }
+  | { kind: "archive"; id: string }
+  | { kind: "unarchive"; id: string }
+  | { kind: "archiveDone" }
   | { kind: "add"; task: TaskRow };
 
 function applyOptimistic(state: TaskRow[], action: OptimisticAction): TaskRow[] {
@@ -72,6 +81,18 @@ function applyOptimistic(state: TaskRow[], action: OptimisticAction): TaskRow[] 
           ? { ...t, status: action.status, is_done: action.status === "done" }
           : t,
       );
+    case "archive":
+      return state.map((t) =>
+        t.id === action.id ? { ...t, archived: true } : t,
+      );
+    case "unarchive":
+      return state.map((t) =>
+        t.id === action.id ? { ...t, archived: false } : t,
+      );
+    case "archiveDone":
+      return state.map((t) =>
+        t.status === "done" && !t.archived ? { ...t, archived: true } : t,
+      );
     case "add":
       return [...state, action.task];
   }
@@ -87,6 +108,7 @@ export function TasksView({
   currentUserId: string | null;
 }) {
   const [filter, setFilter] = useState<string>("all");
+  const [showArchived, setShowArchived] = useState(false);
   const [dragOver, setDragOver] = useState<Status | null>(null);
   const [isPending, startTransition] = useTransition();
   const [optimisticTasks, optimize] = useOptimistic(tasks, applyOptimistic);
@@ -123,6 +145,8 @@ export function TasksView({
         ? !t.assignee_id
         : t.assignee_id === filter,
   );
+  const boardTasks = filtered.filter((t) => !t.archived);
+  const archivedTasks = filtered.filter((t) => t.archived);
 
   const filterChips = [
     { key: "all", label: "All" },
@@ -153,6 +177,7 @@ export function TasksView({
           visibility,
           owner_id: currentUserId,
           status: "todo",
+          archived: false,
         },
       },
       () => addTask(formData),
@@ -234,7 +259,7 @@ export function TasksView({
 
       <div className="grid gap-4 md:grid-cols-3">
         {COLUMNS.map((col) => {
-          const colTasks = filtered.filter((t) => t.status === col.key);
+          const colTasks = boardTasks.filter((t) => t.status === col.key);
           return (
             <div
               key={col.key}
@@ -259,9 +284,24 @@ export function TasksView({
             >
               <div className="flex items-center justify-between px-2 py-1.5">
                 <span className="text-sm font-medium">{col.label}</span>
-                <span className="rounded-full bg-background px-1.5 text-xs text-muted-foreground tabular-nums">
-                  {colTasks.length}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  {col.key === "done" && colTasks.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        run({ kind: "archiveDone" }, () => archiveDoneTasks())
+                      }
+                      className="text-muted-foreground transition-colors hover:text-foreground"
+                      aria-label="Archive all done"
+                      title="Archive all done"
+                    >
+                      <Archive className="size-3.5" />
+                    </button>
+                  )}
+                  <span className="rounded-full bg-background px-1.5 text-xs text-muted-foreground tabular-nums">
+                    {colTasks.length}
+                  </span>
+                </div>
               </div>
               <div className="min-h-16 space-y-2">
                 {colTasks.length === 0 ? (
@@ -296,6 +336,59 @@ export function TasksView({
           );
         })}
       </div>
+
+      {archivedTasks.length > 0 && (
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => setShowArchived((v) => !v)}
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <Archive className="size-4" />
+            {showArchived ? "Hide" : "Show"} archived ({archivedTasks.length})
+          </button>
+          {showArchived && (
+            <ul className="space-y-2">
+              {archivedTasks.map((task) => (
+                <li
+                  key={task.id}
+                  className="flex items-center gap-3 rounded-lg border border-border bg-card/50 px-3 py-2 text-sm"
+                >
+                  <span className="flex-1 truncate text-muted-foreground line-through">
+                    {task.title}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      run({ kind: "unarchive", id: task.id }, () =>
+                        unarchiveTask(task.id),
+                      )
+                    }
+                    className="text-muted-foreground transition-colors hover:text-foreground"
+                    aria-label="Restore"
+                    title="Restore"
+                  >
+                    <ArchiveRestore className="size-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      run({ kind: "delete", id: task.id }, () =>
+                        deleteTask(task.id),
+                      )
+                    }
+                    className="text-muted-foreground transition-colors hover:text-destructive"
+                    aria-label="Delete"
+                    title="Delete"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -433,6 +526,13 @@ function TaskCard({
               </>
             )}
             <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() =>
+                run({ kind: "archive", id: task.id }, () => archiveTask(task.id))
+              }
+            >
+              Archive
+            </DropdownMenuItem>
             <DropdownMenuItem
               variant="destructive"
               onClick={() =>

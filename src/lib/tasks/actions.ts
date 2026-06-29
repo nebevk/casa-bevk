@@ -78,6 +78,40 @@ export async function setTaskStatus(
   revalidatePath("/dashboard");
 }
 
+export async function archiveTask(id: string) {
+  const { supabase } = await authedContext();
+  const { error } = await supabase
+    .from("tasks")
+    .update({ archived_at: new Date().toISOString() } as never)
+    .eq("id", id);
+  if (error) throw error;
+  revalidatePath("/tasks");
+}
+
+export async function unarchiveTask(id: string) {
+  const { supabase } = await authedContext();
+  const { error } = await supabase
+    .from("tasks")
+    .update({ archived_at: null } as never)
+    .eq("id", id);
+  if (error) throw error;
+  revalidatePath("/tasks");
+}
+
+/** Archive every done task in the household (clears the Done column). */
+export async function archiveDoneTasks() {
+  const { household, supabase } = await authedContext();
+  const { error } = await supabase
+    .from("tasks")
+    .update({ archived_at: new Date().toISOString() } as never)
+    .eq("household_id", household.id)
+    .eq("is_done", true)
+    .is("archived_at", null)
+    .is("deleted_at", null);
+  if (error) throw error;
+  revalidatePath("/tasks");
+}
+
 export async function toggleTask(id: string, isDone: boolean) {
   const { supabase } = await authedContext();
   const { error } = await supabase
