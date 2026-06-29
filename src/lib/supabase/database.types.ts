@@ -1560,11 +1560,14 @@ export type Database = {
           is_done: boolean
           list_id: string | null
           notes: string | null
+          owner_id: string | null
           priority: Database["public"]["Enums"]["task_priority"]
           sort_order: number
+          status: Database["public"]["Enums"]["task_status"]
           title: string
           updated_at: string
           updated_by: string | null
+          visibility: Database["public"]["Enums"]["item_visibility"]
         }
         Insert: {
           assignee_id?: string | null
@@ -1578,11 +1581,14 @@ export type Database = {
           is_done?: boolean
           list_id?: string | null
           notes?: string | null
+          owner_id?: string | null
           priority?: Database["public"]["Enums"]["task_priority"]
           sort_order?: number
+          status?: Database["public"]["Enums"]["task_status"]
           title: string
           updated_at?: string
           updated_by?: string | null
+          visibility?: Database["public"]["Enums"]["item_visibility"]
         }
         Update: {
           assignee_id?: string | null
@@ -1596,11 +1602,14 @@ export type Database = {
           is_done?: boolean
           list_id?: string | null
           notes?: string | null
+          owner_id?: string | null
           priority?: Database["public"]["Enums"]["task_priority"]
           sort_order?: number
+          status?: Database["public"]["Enums"]["task_status"]
           title?: string
           updated_at?: string
           updated_by?: string | null
+          visibility?: Database["public"]["Enums"]["item_visibility"]
         }
         Relationships: [
           {
@@ -1630,6 +1639,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "todo_lists"
             referencedColumns: ["id", "household_id"]
+          },
+          {
+            foreignKeyName: "tasks_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "tasks_updated_by_fkey"
@@ -1809,6 +1825,7 @@ export type Database = {
       recurrence_freq: "none" | "daily" | "weekly" | "monthly" | "yearly"
       reminder_method: "push" | "email"
       task_priority: "low" | "normal" | "high" | "urgent"
+      task_status: "todo" | "in_progress" | "done"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1984,6 +2001,7 @@ export const Constants = {
       recurrence_freq: ["none", "daily", "weekly", "monthly", "yearly"],
       reminder_method: ["push", "email"],
       task_priority: ["low", "normal", "high", "urgent"],
+      task_status: ["todo", "in_progress", "done"],
     },
   },
 } as const
