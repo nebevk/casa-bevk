@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth/dal";
+import type { Cadence } from "./recurring";
 
 export type ExpenseRow = {
   id: string;
@@ -10,6 +11,21 @@ export type ExpenseRow = {
   description: string | null;
   category_id: string | null;
   paid_by: string | null;
+};
+
+/** Lean expense shape for multi-month aggregation (no description/id). */
+export type ExpensePoint = {
+  amount: number;
+  occurred_on: string;
+  category_id: string | null;
+  paid_by: string | null;
+};
+
+export type ActiveRecurring = {
+  amount: number;
+  cadence: Cadence;
+  interval: number;
+  category_id: string | null;
 };
 export type CategoryRow = { id: string; name: string };
 export type BudgetRow = {
@@ -67,4 +83,38 @@ export async function getBudgetsForMonth(
     amount: b.amount,
     member_id: (b as { member_id?: string | null }).member_id ?? null,
   }));
+}
+
+/**
+ * Fetch lean expense rows across a date window for trend aggregation. At
+ * two-user scale a 6-12 month window is a few hundred rows, so we group in the
+ * app layer. (A `monthly_expense_totals` SQL RPC is the future optimization if
+ * volume ever grows.)
+ */
+export async function getExpensesInRange(
+  startDate: string,
+  nextDate: string,
+): Promise<ExpensePoint[]> {
+  const user = await getUser();
+  if (!user) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("expenses")
+    .select("amount, occurred_on, category_id, paid_by")
+    .is("deleted_at", null)
+    .gte("occurred_on", startDate)
+    .lt("occurred_on", nextDate);
+  return data ?? [];
+}
+
+/** Active recurring payments, for projecting fixed costs into the trend. */
+export async function getActiveRecurring(): Promise<ActiveRecurring[]> {
+  const user = await getUser();
+  if (!user) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("recurring_payments")
+    .select("amount, cadence, interval, category_id")
+    .eq("is_active", true);
+  return (data ?? []) as ActiveRecurring[];
 }

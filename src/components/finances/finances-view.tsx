@@ -6,9 +6,12 @@ import { ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react";
 import type { Member } from "@/lib/auth/dal";
 import type { ExpenseRow } from "@/lib/expenses/queries";
 import type { MonthInfo } from "@/lib/expenses/month";
+import { toast } from "sonner";
 import { deleteExpense, setBudget } from "@/lib/expenses/actions";
+import type { OverviewData } from "@/lib/expenses/overview";
 import { ExpenseDialog } from "@/components/expenses/expense-dialog";
-import { formatDate, formatMoney } from "@/lib/format";
+import { SpendingOverview } from "@/components/finances/spending-overview";
+import { formatDate, formatMoney, parseMoney } from "@/lib/format";
 import { useT } from "@/lib/i18n/provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,25 +26,33 @@ import { cn } from "@/lib/utils";
 
 export type BudgetRowData = { name: string; budget: number; spent: number };
 
-const hrefFor = (monthKey: string, memberId: string | null) =>
-  `/finances?month=${monthKey}${memberId ? `&member=${memberId}` : ""}`;
+type View = "month" | "overview";
+
+const hrefFor = (monthKey: string, memberId: string | null, view: View) =>
+  `/finances?month=${monthKey}` +
+  (memberId ? `&member=${memberId}` : "") +
+  (view === "overview" ? "&view=overview" : "");
 
 export function FinancesView({
   month,
+  view,
   members,
   selectedMember,
   budgetRows,
   expenses,
+  overview,
   categoryName,
   categoryNames,
   memberName,
   currentUserId,
 }: {
   month: MonthInfo;
+  view: View;
   members: Member[];
   selectedMember: string | null;
   budgetRows: BudgetRowData[];
   expenses: ExpenseRow[];
+  overview: OverviewData | null;
   categoryName: Record<string, string>;
   categoryNames: string[];
   memberName: Record<string, string>;
@@ -49,7 +60,9 @@ export function FinancesView({
 }) {
   const t = useT();
   const totalBudget = budgetRows.reduce((s, r) => s + r.budget, 0);
-  const totalSpent = budgetRows.reduce((s, r) => s + r.spent, 0);
+  // Sum the actual (scoped) expense rows so the header reconciles with the list
+  // below, including uncategorized spend that has no budget row.
+  const totalSpent = expenses.reduce((s, e) => s + e.amount, 0);
   const diff = totalBudget - totalSpent;
 
   const scopes = [{ id: null as string | null, label: t("finances.shared") }].concat(
@@ -81,10 +94,27 @@ export function FinancesView({
       </div>
 
       <div className="flex flex-wrap gap-2">
+        {(["month", "overview"] as const).map((v) => (
+          <Link
+            key={v}
+            href={hrefFor(month.key, selectedMember, v)}
+            className={cn(
+              "rounded-full border px-3 py-1 text-sm transition-colors",
+              view === v
+                ? "border-primary bg-primary/10 text-foreground"
+                : "border-border text-muted-foreground hover:bg-muted",
+            )}
+          >
+            {v === "month" ? t("finances.tabThisMonth") : t("finances.tabOverview")}
+          </Link>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
         {scopes.map((s) => (
           <Link
             key={s.id ?? "shared"}
-            href={hrefFor(month.key, s.id)}
+            href={hrefFor(month.key, s.id, view)}
             className={cn(
               "rounded-full border px-3 py-1 text-sm transition-colors",
               selectedMember === s.id
@@ -99,7 +129,7 @@ export function FinancesView({
 
       <div className="flex items-center justify-between rounded-lg border border-border bg-card p-3">
         <Link
-          href={hrefFor(month.prevKey, selectedMember)}
+          href={hrefFor(month.prevKey, selectedMember, view)}
           className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
           aria-label={t("finances.previousMonth")}
         >
@@ -127,7 +157,7 @@ export function FinancesView({
           )}
         </div>
         <Link
-          href={hrefFor(month.nextKey, selectedMember)}
+          href={hrefFor(month.nextKey, selectedMember, view)}
           className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
           aria-label={t("finances.nextMonth")}
         >
@@ -135,56 +165,62 @@ export function FinancesView({
         </Link>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-heading text-lg">
-            {t("finances.planVsSpending")}
-          </CardTitle>
-          <CardDescription>{t("finances.planVsSpendingDesc")}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {budgetRows.map((row) => (
-            <BudgetRow
-              key={row.name}
-              row={row}
-              periodMonth={month.periodMonth}
-              memberId={selectedMember}
-            />
-          ))}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-heading text-lg">
-            {t("finances.expenses")}
-          </CardTitle>
-          <CardDescription>
-            {t("finances.expensesThisMonth", { count: expenses.length })}
-            {selectedMember
-              ? ` · ${t("finances.paidByName", { name: memberName[selectedMember] })}`
-              : ""}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {expenses.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
-              {t("finances.noExpenses")}
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {expenses.map((e) => (
-                <ExpenseItem
-                  key={e.id}
-                  expense={e}
-                  categoryName={categoryName}
-                  memberName={memberName}
+      {view === "overview" && overview ? (
+        <SpendingOverview overview={overview} />
+      ) : (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-heading text-lg">
+                {t("finances.planVsSpending")}
+              </CardTitle>
+              <CardDescription>{t("finances.planVsSpendingDesc")}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {budgetRows.map((row) => (
+                <BudgetRow
+                  key={row.name}
+                  row={row}
+                  periodMonth={month.periodMonth}
+                  memberId={selectedMember}
                 />
               ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-heading text-lg">
+                {t("finances.expenses")}
+              </CardTitle>
+              <CardDescription>
+                {t("finances.expensesThisMonth", { count: expenses.length })}
+                {selectedMember
+                  ? ` · ${t("finances.paidByName", { name: memberName[selectedMember] })}`
+                  : ""}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {expenses.length === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  {t("finances.noExpenses")}
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {expenses.map((e) => (
+                    <ExpenseItem
+                      key={e.id}
+                      expense={e}
+                      categoryName={categoryName}
+                      memberName={memberName}
+                    />
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
 }
@@ -199,16 +235,33 @@ function BudgetRow({
   memberId: string | null;
 }) {
   const t = useT();
-  const [value, setValue] = useState(row.budget ? String(row.budget) : "");
+  const initial = row.budget ? String(row.budget) : "";
+  const [value, setValue] = useState(initial);
   const [, startTransition] = useTransition();
   const pct = row.budget > 0 ? Math.min(100, (row.spent / row.budget) * 100) : 0;
   const over = row.budget > 0 && row.spent > row.budget;
   const remaining = row.budget - row.spent;
 
   function save() {
-    const amount = Number(value);
-    if (!Number.isFinite(amount) || amount < 0 || amount === row.budget) return;
-    startTransition(() => setBudget(row.name, periodMonth, amount, memberId));
+    const trimmed = value.trim();
+    // Unchanged input (including still-empty) is a no-op. Emptying the field
+    // clears the plan back to 0; any other value is parsed/validated. The amount
+    // is re-validated server-side, which is the real trust boundary.
+    if (trimmed === initial) return;
+    const amount = trimmed === "" ? 0 : parseMoney(trimmed);
+    if (amount == null || amount < 0) {
+      setValue(initial);
+      toast.error(t("finances.invalidAmount"));
+      return;
+    }
+    startTransition(async () => {
+      try {
+        await setBudget(row.name, periodMonth, trimmed === "" ? "0" : trimmed, memberId);
+      } catch {
+        setValue(initial);
+        toast.error(t("finances.invalidAmount"));
+      }
+    });
   }
 
   return (

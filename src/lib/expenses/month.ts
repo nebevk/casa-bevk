@@ -41,3 +41,37 @@ export function getMonthInfo(month?: string): MonthInfo {
     nextKey: `${next.getUTCFullYear()}-${pad(next.getUTCMonth() + 1)}`,
   };
 }
+
+export type MonthBucket = {
+  key: string; // YYYY-MM
+  label: string; // short, e.g. "Jun"
+  startDate: string; // YYYY-MM-01 (inclusive)
+  nextDate: string; // first day of next month (exclusive)
+  periodMonth: string; // = startDate (budgets.period_month)
+};
+
+/**
+ * Build the rolling window of `count` months ending at (and including) the
+ * month identified by `endKey` (a `YYYY-MM`, or the current month). Oldest
+ * first, so it feeds a left-to-right trend chart directly.
+ */
+export function getMonthRange(endKey: string | undefined, count: number): MonthBucket[] {
+  const end = getMonthInfo(endKey);
+  const [ey, em] = end.key.split("-").map(Number);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const buckets: MonthBucket[] = [];
+  for (let i = count - 1; i >= 0; i--) {
+    const start = new Date(Date.UTC(ey, em - 1 - i, 1));
+    const next = new Date(Date.UTC(ey, em - i, 1));
+    const y = start.getUTCFullYear();
+    const m = start.getUTCMonth() + 1;
+    buckets.push({
+      key: `${y}-${pad(m)}`,
+      label: start.toLocaleDateString(undefined, { month: "short", timeZone: "UTC" }),
+      startDate: `${y}-${pad(m)}-01`,
+      nextDate: `${next.getUTCFullYear()}-${pad(next.getUTCMonth() + 1)}-01`,
+      periodMonth: `${y}-${pad(m)}-01`,
+    });
+  }
+  return buckets;
+}

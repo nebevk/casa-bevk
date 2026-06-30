@@ -1,22 +1,30 @@
 import type { Metadata } from "next";
 import { getHouseholdMembers, getUser } from "@/lib/auth/dal";
 import {
+  getActiveRecurring,
   getBudgetsForMonth,
   getExpenseCategories,
   getExpensesForMonth,
+  getExpensesInRange,
 } from "@/lib/expenses/queries";
-import { getMonthInfo } from "@/lib/expenses/month";
+import { getMonthInfo, getMonthRange } from "@/lib/expenses/month";
+import { buildOverview, type OverviewData } from "@/lib/expenses/overview";
 import { DEFAULT_EXPENSE_CATEGORIES } from "@/lib/expenses/constants";
+import { getT } from "@/lib/i18n/server";
 import { FinancesView } from "@/components/finances/finances-view";
 
 export const metadata: Metadata = { title: "Finances" };
 
+// Rolling window for the Overview trend.
+const TREND_MONTHS = 6;
+
 export default async function FinancesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; member?: string }>;
+  searchParams: Promise<{ month?: string; member?: string; view?: string }>;
 }) {
-  const { month, member } = await searchParams;
+  const { month, member, view: viewParam } = await searchParams;
+  const view = viewParam === "overview" ? "overview" : "month";
   const info = getMonthInfo(month);
   const [categories, budgets, expenses, members, user] = await Promise.all([
     getExpenseCategories(),
@@ -66,13 +74,40 @@ export default async function FinancesPage({
     members.map((m) => [m.id, m.name] as const),
   );
 
+  // Overview tab: pull the rolling window + recurring costs and aggregate.
+  let overview: OverviewData | null = null;
+  if (view === "overview") {
+    const monthsRange = getMonthRange(info.key, TREND_MONTHS);
+    const [rangeExpenses, recurring, { t }] = await Promise.all([
+      getExpensesInRange(monthsRange[0].startDate, info.nextDate),
+      // Recurring costs are household-shared (no payer), so only fold them into
+      // the unscoped (Shared) view to avoid mis-attributing them to one person.
+      selectedMember ? Promise.resolve([]) : getActiveRecurring(),
+      getT(),
+    ]);
+    const scopedRange = selectedMember
+      ? rangeExpenses.filter((e) => e.paid_by === selectedMember)
+      : rangeExpenses;
+    overview = buildOverview({
+      months: monthsRange,
+      expenses: scopedRange,
+      recurring,
+      includeRecurring: !selectedMember,
+      categoryName,
+      uncategorizedLabel: t("finances.uncategorized"),
+      otherLabel: t("finances.otherCategory"),
+    });
+  }
+
   return (
     <FinancesView
       month={info}
+      view={view}
       members={members}
       selectedMember={selectedMember}
       budgetRows={budgetRows}
       expenses={scopedExpenses}
+      overview={overview}
       categoryName={categoryName}
       categoryNames={categories.map((c) => c.name)}
       memberName={memberName}
