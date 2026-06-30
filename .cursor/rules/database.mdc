@@ -13,8 +13,8 @@ Source of truth: `supabase/migrations/`. Postgres + RLS is the **entire** securi
 model for this private two-user app.
 
 **Remote project:** `casa-bevk` — ref `bqahklmyziowboicwwjj` (eu-central-1). Schema
-applied through `0007_task_archive` (`0008_storage_rls` pending); types in
-`src/lib/supabase/database.types.ts`.
+applied through `0007_task_archive` (`0008_storage_rls`, `0009_activity` pending);
+types in `src/lib/supabase/database.types.ts`.
 
 ## Applying migrations (Supabase MCP)
 
@@ -70,6 +70,10 @@ applied through `0007_task_archive` (`0008_storage_rls` pending); types in
   (internet/mobile/tv/electricity/gas/upravnik/komunala… contracts; `provider_type`
   extended in `0004`), maintenance_log (services + inspections, `next_service_on`),
   documents (personal/shared)
+- **Activity (`0009_activity.sql`):** workouts (timed-circuit, `rounds`),
+  workout_steps (ordered moves, `duration_seconds`, `is_rest`; composite FK to
+  workouts), sport_profiles (per-member Strava links; `platform`, `url`, `label`).
+  All household-shared (is_household_member, no owner predicate), in realtime.
 - **Medical (`0004_records_medical.sql`):** medical_contacts (doctors/dentists;
   `kind` gp/dentist/pediatrician/gynecologist/specialist/other; `member_id` null =
   both), health_reminders (checkups/vaccinations; `due_on`, optional `interval_months`,
@@ -85,8 +89,9 @@ applied through `0007_task_archive` (`0008_storage_rls` pending); types in
 
 todo_lists, tasks, shopping_lists, shopping_items, notes, calendar_events,
 event_reminders, expense_categories, expenses, budgets, recurring_payments, assets,
-providers, maintenance_log, medical_contacts, health_reminders, documents, attachments,
-household_members, households, household_settings, profiles. (AI/staging tables excluded.)
+providers, maintenance_log, medical_contacts, health_reminders, workouts, workout_steps,
+sport_profiles, documents, attachments, household_members, households,
+household_settings, profiles. (AI/staging tables excluded.)
 
 ## Open questions (decide as features land)
 

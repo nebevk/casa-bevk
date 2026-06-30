@@ -16,8 +16,9 @@ The schema + RLS are the source of truth in `supabase/migrations/`. Applied on
 the remote project through `0007_task_archive.sql` (personal/shared tasks in
 `0005`, kanban status in `0006`, archive via `archived_at` in `0007`).
 **`0008_storage_rls.sql` (private `casa-bevk` bucket + `storage.objects` RLS,
-keyed on the first path segment = household_id) is pending; apply it via the
-Supabase MCP before any file-upload feature ships.** Regenerate types after new
+keyed on the first path segment = household_id) and `0009_activity.sql`
+(workouts + workout_steps + sport_profiles) are pending; apply them in order via
+the Supabase MCP.** Apply `0008` before any file-upload feature ships. Regenerate types after new
 migrations: `pnpm db:types` (or Supabase MCP `generate_typescript_types` if the
 CLI is not linked).
 

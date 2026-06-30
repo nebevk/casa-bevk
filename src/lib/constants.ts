@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  Activity,
   Boxes,
   CalendarDays,
   LayoutDashboard,
@@ -46,6 +47,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Finances", href: "/finances", icon: Wallet, description: "Expenses & budget" },
   { label: "Subscriptions", href: "/subscriptions", icon: Repeat, description: "Recurring payments" },
   { label: "Records", href: "/records", icon: Boxes, description: "Cars, apartment & providers" },
+  { label: "Activity", href: "/activity", icon: Activity, description: "Workouts & Strava" },
 ];
 
 export const SETTINGS_ITEM: NavItem = {

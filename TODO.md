@@ -67,6 +67,12 @@ The two structurally-similar list features that prove the full CRUD + realtime p
 - [ ] **Google Calendar sync** — between the family calendar and Google Calendar.
       OAuth client secret already obtained (keep it out of the repo — store as env
       vars). Decide: one-way ICS subscribe (simple) vs. full two-way OAuth sync.
+- [ ] **Strava deep integration** — the Activity tab ships with manual profile
+      links (no embedding; Strava blocks iframing profile pages) and a play-along
+      workout player (`0009_activity.sql`). Later: Strava OAuth to pull recent
+      activities/stats into the Activity tab (per-member feed, weekly totals).
+      Needs a Strava API app (client id/secret, keep out of repo) + a `strava`
+      token table. Optionally import a Strava activity as a workout.
 
 ---
 
