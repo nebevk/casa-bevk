@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import type { CalendarEvent } from "@/lib/calendar/recurrence";
 import { addEvent, deleteEvent, updateEvent } from "@/lib/calendar/actions";
 import { todayDateInput } from "@/lib/format";
+import { useT } from "@/lib/i18n/provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,13 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
-const FREQ = [
-  ["none", "Once"],
-  ["daily", "Daily"],
-  ["weekly", "Weekly"],
-  ["monthly", "Monthly"],
-  ["yearly", "Yearly"],
-] as const;
+const FREQ = ["none", "daily", "weekly", "monthly", "yearly"] as const;
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const toDateInput = (iso?: string | null) => {
@@ -53,6 +48,7 @@ export function EventDialog({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
+  const t = useT();
   const isEdit = Boolean(event?.id);
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = open ?? internalOpen;
@@ -97,7 +93,7 @@ export function EventDialog({
         if (isEdit && event) await updateEvent(event.id, formData);
         else await addEvent(formData);
       } catch {
-        toast.error("Couldn't save event, please try again.");
+        toast.error(t("calendar.saveError"));
       }
     });
   }
@@ -108,23 +104,23 @@ export function EventDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-heading">
-            {isEdit ? "Edit event" : "New event"}
+            {isEdit ? t("calendar.editEvent") : t("calendar.newEvent")}
           </DialogTitle>
-          <DialogDescription>On your shared family calendar.</DialogDescription>
+          <DialogDescription>{t("calendar.dialogDesc")}</DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-3">
           <Field
             name="title"
-            label="Title"
+            label={t("calendar.fields.title")}
             required
-            placeholder="e.g. Dentist, Date night"
+            placeholder={t("calendar.titlePlaceholder")}
             defaultValue={event?.title ?? ""}
           />
 
           <div className="grid grid-cols-2 gap-3">
             <Field
               name="date"
-              label="Date"
+              label={t("calendar.fields.date")}
               type="date"
               required
               defaultValue={
@@ -135,7 +131,7 @@ export function EventDialog({
             />
             <div className="flex items-end">
               <Chip active={allDay} onClick={() => setAllDay((v) => !v)}>
-                All day
+                {t("calendar.allDay")}
               </Chip>
             </div>
           </div>
@@ -144,13 +140,13 @@ export function EventDialog({
             <div className="grid grid-cols-2 gap-3">
               <Field
                 name="start_time"
-                label="Start"
+                label={t("calendar.fields.start")}
                 type="time"
                 defaultValue={event ? toTimeInput(event.starts_at) : "09:00"}
               />
               <Field
                 name="end_time"
-                label="End"
+                label={t("calendar.fields.end")}
                 type="time"
                 defaultValue={event?.ends_at ? toTimeInput(event.ends_at) : ""}
               />
@@ -158,11 +154,13 @@ export function EventDialog({
           )}
 
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Repeats</Label>
+            <Label className="text-xs text-muted-foreground">
+              {t("calendar.repeats")}
+            </Label>
             <div className="flex flex-wrap gap-1.5">
-              {FREQ.map(([value, label]) => (
+              {FREQ.map((value) => (
                 <Chip key={value} active={freq === value} onClick={() => setFreq(value)}>
-                  {label}
+                  {t(`calendar.freq.${value}`)}
                 </Chip>
               ))}
             </div>
@@ -171,7 +169,7 @@ export function EventDialog({
           {freq !== "none" && (
             <Field
               name="until"
-              label="Repeat until (optional)"
+              label={t("calendar.fields.until")}
               type="date"
               defaultValue={
                 event?.recurrence_until ? toDateInput(event.recurrence_until) : ""
@@ -181,7 +179,7 @@ export function EventDialog({
 
           <Field
             name="location"
-            label="Location (optional)"
+            label={t("calendar.fields.location")}
             defaultValue={event?.location ?? ""}
           />
 
@@ -197,19 +195,19 @@ export function EventDialog({
                     try {
                       await deleteEvent(event.id);
                     } catch {
-                      toast.error("Couldn't delete event, please try again.");
+                      toast.error(t("calendar.deleteError"));
                     }
                   });
                 }}
               >
-                Delete
+                {t("calendar.delete")}
               </Button>
             ) : (
               <span />
             )}
             <Button type="submit" disabled={isPending}>
               {isPending && <Loader2 className="animate-spin" />}
-              {isEdit ? "Save" : "Add event"}
+              {isEdit ? t("calendar.save") : t("calendar.addEvent")}
             </Button>
           </DialogFooter>
         </form>

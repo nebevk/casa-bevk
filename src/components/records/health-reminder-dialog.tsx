@@ -9,6 +9,7 @@ import {
   addHealthReminder,
   updateHealthReminder,
 } from "@/lib/medical/actions";
+import { useT } from "@/lib/i18n/provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,10 +25,10 @@ import {
 import { cn } from "@/lib/utils";
 
 const KINDS = [
-  ["checkup", "Checkup"],
-  ["vaccination", "Vaccination"],
-  ["screening", "Screening"],
-  ["other", "Other"],
+  ["checkup", "records.kind.checkup"],
+  ["vaccination", "records.kind.vaccination"],
+  ["screening", "records.kind.screening"],
+  ["other", "records.kind.other"],
 ] as const;
 
 export function HealthReminderDialog({
@@ -45,6 +46,7 @@ export function HealthReminderDialog({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
+  const t = useT();
   const isEdit = Boolean(reminder?.id);
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = open ?? internalOpen;
@@ -70,7 +72,7 @@ export function HealthReminderDialog({
           await updateHealthReminder(reminder.id, formData);
         else await addHealthReminder(formData);
       } catch {
-        toast.error("Couldn't save, please try again.");
+        toast.error(t("records.toast.saveFailed"));
       }
     });
   }
@@ -81,34 +83,34 @@ export function HealthReminderDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-heading">
-            {isEdit ? "Edit reminder" : "New health reminder"}
+            {isEdit ? t("records.reminderDialog.editTitle") : t("records.reminderDialog.addTitle")}
           </DialogTitle>
           <DialogDescription>
-            A checkup, vaccination, or screening to remember.
+            {t("records.reminderDialog.desc")}
           </DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-3">
           <div className="flex flex-wrap gap-1.5">
             {KINDS.map(([value, label]) => (
               <Chip key={value} active={kind === value} onClick={() => setKind(value)}>
-                {label}
+                {t(label)}
               </Chip>
             ))}
           </div>
 
           <Field
             name="title"
-            label="What"
+            label={t("records.field.what")}
             required
             placeholder="e.g. Zobozdravnik kontrola"
             defaultValue={reminder?.title ?? ""}
           />
 
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">For</Label>
+            <Label className="text-xs text-muted-foreground">{t("records.for")}</Label>
             <div className="flex flex-wrap gap-1.5">
               <Chip active={member === "both"} onClick={() => setMember("both")}>
-                Both
+                {t("records.both")}
               </Chip>
               {members.map((m) => (
                 <Chip key={m.id} active={member === m.id} onClick={() => setMember(m.id)}>
@@ -121,14 +123,14 @@ export function HealthReminderDialog({
           <div className="grid grid-cols-2 gap-2">
             <Field
               name="due_on"
-              label="Due date"
+              label={t("records.field.dueDate")}
               type="date"
               required
               defaultValue={reminder?.due_on ?? ""}
             />
             <Field
               name="interval_months"
-              label="Repeat every (months)"
+              label={t("records.field.repeatEvery")}
               type="number"
               placeholder="12"
               defaultValue={
@@ -141,7 +143,7 @@ export function HealthReminderDialog({
 
           <div className="space-y-1.5">
             <Label htmlFor="hr-notes" className="text-xs text-muted-foreground">
-              Notes
+              {t("records.field.notes")}
             </Label>
             <textarea
               id="hr-notes"
@@ -155,7 +157,7 @@ export function HealthReminderDialog({
           <DialogFooter>
             <Button type="submit" disabled={isPending}>
               {isPending && <Loader2 className="animate-spin" />}
-              {isEdit ? "Save" : "Add reminder"}
+              {isEdit ? t("records.save") : t("records.addReminder")}
             </Button>
           </DialogFooter>
         </form>

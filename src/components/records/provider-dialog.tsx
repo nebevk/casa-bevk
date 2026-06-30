@@ -4,6 +4,7 @@ import { useState, useTransition, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import type { ProviderRow } from "@/lib/records/queries";
 import { addProvider, updateProvider } from "@/lib/records/actions";
+import { useT } from "@/lib/i18n/provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,23 +20,23 @@ import {
 import { cn } from "@/lib/utils";
 
 const TYPES = [
-  ["internet", "Internet"],
-  ["mobile", "Mobile"],
-  ["tv", "TV"],
-  ["electricity", "Electricity"],
-  ["gas", "Gas"],
-  ["utility", "Utility"],
-  ["upravnik", "Upravnik"],
-  ["komunala", "Komunala"],
-  ["insurance", "Insurance"],
-  ["other", "Other"],
+  ["internet", "records.providerType.internet"],
+  ["mobile", "records.providerType.mobile"],
+  ["tv", "records.providerType.tv"],
+  ["electricity", "records.providerType.electricity"],
+  ["gas", "records.providerType.gas"],
+  ["utility", "records.providerType.utility"],
+  ["upravnik", "records.providerType.upravnik"],
+  ["komunala", "records.providerType.komunala"],
+  ["insurance", "records.providerType.insurance"],
+  ["other", "records.providerType.other"],
 ] as const;
 
 const CADENCES = [
-  ["monthly", "Monthly"],
-  ["yearly", "Yearly"],
-  ["quarterly", "Quarterly"],
-  ["weekly", "Weekly"],
+  ["monthly", "records.cadence.monthly"],
+  ["yearly", "records.cadence.yearly"],
+  ["quarterly", "records.cadence.quarterly"],
+  ["weekly", "records.cadence.weekly"],
 ] as const;
 
 export function ProviderDialog({
@@ -49,6 +50,7 @@ export function ProviderDialog({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
+  const t = useT();
   const isEdit = Boolean(provider?.id);
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = open ?? internalOpen;
@@ -73,10 +75,10 @@ export function ProviderDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-heading">
-            {isEdit ? "Edit provider" : "Add provider"}
+            {isEdit ? t("records.providerDialog.editTitle") : t("records.providerDialog.addTitle")}
           </DialogTitle>
           <DialogDescription>
-            Internet, mobile, TV, utilities, insurance…
+            {t("records.providerDialog.desc")}
           </DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-3">
@@ -93,25 +95,25 @@ export function ProviderDialog({
                     : "border-border text-muted-foreground hover:bg-muted",
                 )}
               >
-                {label}
+                {t(label)}
               </button>
             ))}
           </div>
 
-          <Field name="name" label="Name" required placeholder="e.g. Telekom" defaultValue={provider?.name} />
-          <Field name="plan" label="Plan" placeholder="e.g. Fiber 1 Gbps" defaultValue={provider?.plan ?? ""} />
+          <Field name="name" label={t("records.field.name")} required placeholder="e.g. Telekom" defaultValue={provider?.name} />
+          <Field name="plan" label={t("records.field.plan")} placeholder="e.g. Fiber 1 Gbps" defaultValue={provider?.plan ?? ""} />
 
           <div className="grid grid-cols-2 gap-3">
             <Field
               name="monthly_cost"
-              label="Cost / month (€)"
+              label={t("records.field.costPerMonth")}
               type="number"
               step="0.01"
               placeholder="29.99"
               defaultValue={provider?.monthly_cost ?? ""}
             />
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Billing</Label>
+              <Label className="text-xs text-muted-foreground">{t("records.field.billing")}</Label>
               <div className="flex flex-wrap gap-1">
                 {CADENCES.map(([value, label]) => (
                   <button
@@ -125,22 +127,22 @@ export function ProviderDialog({
                         : "border-border text-muted-foreground hover:bg-muted",
                     )}
                   >
-                    {label}
+                    {t(label)}
                   </button>
                 ))}
               </div>
             </div>
           </div>
 
-          <Field name="renewal_date" label="Renewal date" type="date" defaultValue={provider?.renewal_date ?? ""} />
-          <Field name="account_number" label="Account / customer no." defaultValue={provider?.account_number ?? ""} />
-          <Field name="contact" label="Contact (phone / email)" defaultValue={provider?.contact ?? ""} />
-          <Field name="notes" label="Notes" defaultValue={provider?.notes ?? ""} />
+          <Field name="renewal_date" label={t("records.field.renewalDate")} type="date" defaultValue={provider?.renewal_date ?? ""} />
+          <Field name="account_number" label={t("records.field.accountNumber")} defaultValue={provider?.account_number ?? ""} />
+          <Field name="contact" label={t("records.field.contact")} defaultValue={provider?.contact ?? ""} />
+          <Field name="notes" label={t("records.field.notes")} defaultValue={provider?.notes ?? ""} />
 
           <DialogFooter>
             <Button type="submit" disabled={isPending}>
               {isPending && <Loader2 className="animate-spin" />}
-              {isEdit ? "Save" : "Add provider"}
+              {isEdit ? t("records.save") : t("records.addProvider")}
             </Button>
           </DialogFooter>
         </form>

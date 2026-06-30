@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CozyEmpty, MugArt } from "@/components/cozy";
+import { useT } from "@/lib/i18n/provider";
 import { cn } from "@/lib/utils";
 
 type OptimisticAction =
@@ -40,6 +41,7 @@ function applyOptimistic(
 }
 
 export function ShoppingView({ items }: { items: ShoppingItemRow[] }) {
+  const t = useT();
   const [isPending, startTransition] = useTransition();
   const [optimisticItems, optimize] = useOptimistic(items, applyOptimistic);
   const formRef = useRef<HTMLFormElement>(null);
@@ -51,7 +53,7 @@ export function ShoppingView({ items }: { items: ShoppingItemRow[] }) {
       try {
         await mutate();
       } catch {
-        toast.error("Couldn't save, please try again.");
+        toast.error(t("shopping.saveError"));
       }
     });
   }
@@ -86,10 +88,10 @@ export function ShoppingView({ items }: { items: ShoppingItemRow[] }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-heading text-2xl font-semibold tracking-tight">
-            Shopping
+            {t("shopping.title")}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Your shared list. Check items off as you go.
+            {t("shopping.subtitle")}
           </p>
         </div>
         {checked.length > 0 && (
@@ -99,7 +101,7 @@ export function ShoppingView({ items }: { items: ShoppingItemRow[] }) {
             disabled={isPending}
           >
             <Trash2 />
-            Clear checked ({checked.length})
+            {t("shopping.clearChecked", { count: checked.length })}
           </Button>
         )}
       </div>
@@ -112,7 +114,7 @@ export function ShoppingView({ items }: { items: ShoppingItemRow[] }) {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Input
             name="name"
-            placeholder="Add an item…"
+            placeholder={t("shopping.addItemPlaceholder")}
             required
             autoComplete="off"
             className="flex-1"
@@ -123,27 +125,25 @@ export function ShoppingView({ items }: { items: ShoppingItemRow[] }) {
             min="1"
             step="1"
             defaultValue={1}
-            aria-label="Quantity"
+            aria-label={t("shopping.quantity")}
             className="w-20"
           />
           <Input
             name="category"
-            placeholder="Aisle / category"
+            placeholder={t("shopping.categoryPlaceholder")}
             autoComplete="off"
             className="sm:w-44"
           />
           <Button type="submit" disabled={isPending}>
             {isPending ? <Loader2 className="animate-spin" /> : <Plus />}
-            Add
+            {t("shopping.add")}
           </Button>
         </div>
       </form>
 
       <div className="space-y-2">
         {open.length === 0 ? (
-          <CozyEmpty art={<MugArt />}>
-            Your list is empty. Add something above.
-          </CozyEmpty>
+          <CozyEmpty art={<MugArt />}>{t("shopping.empty")}</CozyEmpty>
         ) : (
           open.map((item) => (
             <ShoppingItem key={item.id} item={item} run={run} />
@@ -154,7 +154,7 @@ export function ShoppingView({ items }: { items: ShoppingItemRow[] }) {
       {checked.length > 0 && (
         <div className="space-y-2">
           <h2 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            In the cart ({checked.length})
+            {t("shopping.inTheCart", { count: checked.length })}
           </h2>
           {checked.map((item) => (
             <ShoppingItem key={item.id} item={item} run={run} />
@@ -172,6 +172,7 @@ function ShoppingItem({
   item: ShoppingItemRow;
   run: (action: OptimisticAction, mutate: () => Promise<void>) => void;
 }) {
+  const t = useT();
   return (
     <div className="group flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 shadow-sm">
       <button
@@ -182,7 +183,7 @@ function ShoppingItem({
           )
         }
         className="text-muted-foreground transition-colors hover:text-primary"
-        aria-label={item.is_checked ? "Uncheck" : "Check off"}
+        aria-label={item.is_checked ? t("shopping.uncheck") : t("shopping.checkOff")}
       >
         {item.is_checked ? (
           <CheckCircle2 className="size-5 text-primary" />
@@ -219,7 +220,7 @@ function ShoppingItem({
           )
         }
         className="reveal-hover -m-1 rounded-md p-1 text-muted-foreground hover:text-destructive"
-        aria-label="Remove item"
+        aria-label={t("shopping.removeItem")}
       >
         <Trash2 className="size-4" />
       </button>

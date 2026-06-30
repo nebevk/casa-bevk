@@ -20,6 +20,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/provider";
 
 export type ProviderOption = {
   id: string;
@@ -28,10 +29,10 @@ export type ProviderOption = {
 };
 
 const CADENCES = [
-  ["monthly", "Monthly"],
-  ["yearly", "Yearly"],
-  ["quarterly", "Quarterly"],
-  ["weekly", "Weekly"],
+  "monthly",
+  "yearly",
+  "quarterly",
+  "weekly",
 ] as const;
 
 export function SubscriptionDialog({
@@ -47,6 +48,7 @@ export function SubscriptionDialog({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
+  const t = useT();
   const isEdit = Boolean(subscription?.id);
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = open ?? internalOpen;
@@ -87,17 +89,17 @@ export function SubscriptionDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-heading">
-            {isEdit ? "Edit subscription" : "Add subscription"}
+            {isEdit ? t("subscriptions.editTitle") : t("subscriptions.add")}
           </DialogTitle>
           <DialogDescription>
-            Recurring payments: bills, subscriptions, memberships.
+            {t("subscriptions.dialogDesc")}
           </DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-3">
           {providers.length > 0 && (
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">
-                From a provider (optional)
+                {t("subscriptions.fromProvider")}
               </Label>
               <div className="flex flex-wrap gap-1.5">
                 {providers.map((p) => (
@@ -121,14 +123,14 @@ export function SubscriptionDialog({
 
           <div className="space-y-1.5">
             <Label htmlFor="sub-name" className="text-xs text-muted-foreground">
-              Name
+              {t("subscriptions.name")}
             </Label>
             <Input
               id="sub-name"
               name="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Netflix, A1, Komunala"
+              placeholder={t("subscriptions.namePlaceholder")}
               required
               autoComplete="off"
             />
@@ -140,7 +142,7 @@ export function SubscriptionDialog({
                 htmlFor="sub-amount"
                 className="text-xs text-muted-foreground"
               >
-                Amount (€)
+                {t("subscriptions.amount")}
               </Label>
               <Input
                 id="sub-amount"
@@ -159,7 +161,7 @@ export function SubscriptionDialog({
                 htmlFor="sub-due"
                 className="text-xs text-muted-foreground"
               >
-                Next due
+                {t("subscriptions.nextDue")}
               </Label>
               <Input
                 id="sub-due"
@@ -171,9 +173,11 @@ export function SubscriptionDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Billing</Label>
+            <Label className="text-xs text-muted-foreground">
+              {t("subscriptions.billing")}
+            </Label>
             <div className="flex flex-wrap gap-1.5">
-              {CADENCES.map(([value, label]) => (
+              {CADENCES.map((value) => (
                 <button
                   key={value}
                   type="button"
@@ -185,7 +189,7 @@ export function SubscriptionDialog({
                       : "border-border text-muted-foreground hover:bg-muted",
                   )}
                 >
-                  {label}
+                  {t(`subscriptions.cadence.${value}`)}
                 </button>
               ))}
             </div>
@@ -193,7 +197,7 @@ export function SubscriptionDialog({
 
           <div className="space-y-1.5">
             <Label htmlFor="sub-notes" className="text-xs text-muted-foreground">
-              Notes (optional)
+              {t("subscriptions.notes")}
             </Label>
             <Input
               id="sub-notes"
@@ -206,7 +210,7 @@ export function SubscriptionDialog({
           <DialogFooter>
             <Button type="submit" disabled={isPending}>
               {isPending && <Loader2 className="animate-spin" />}
-              {isEdit ? "Save" : "Add subscription"}
+              {isEdit ? t("subscriptions.save") : t("subscriptions.add")}
             </Button>
           </DialogFooter>
         </form>

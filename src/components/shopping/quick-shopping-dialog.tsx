@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { addShoppingItem } from "@/lib/shopping/actions";
+import { useT } from "@/lib/i18n/provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,6 +23,7 @@ export function QuickShoppingDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const t = useT();
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(formData: FormData) {
@@ -30,7 +32,7 @@ export function QuickShoppingDialog({
       try {
         await addShoppingItem(formData);
       } catch {
-        toast.error("Couldn't add item, please try again.");
+        toast.error(t("shopping.addError"));
       }
     });
   }
@@ -39,14 +41,16 @@ export function QuickShoppingDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-heading">Add to shopping</DialogTitle>
-          <DialogDescription>Add an item to your shared list.</DialogDescription>
+          <DialogTitle className="font-heading">
+            {t("shopping.quickTitle")}
+          </DialogTitle>
+          <DialogDescription>{t("shopping.quickDesc")}</DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-3">
           <div className="flex gap-2">
             <Input
               name="name"
-              placeholder="Item…"
+              placeholder={t("shopping.itemPlaceholder")}
               required
               autoFocus
               autoComplete="off"
@@ -58,19 +62,19 @@ export function QuickShoppingDialog({
               min="1"
               step="1"
               defaultValue={1}
-              aria-label="Quantity"
+              aria-label={t("shopping.quantity")}
               className="w-20"
             />
           </div>
           <Input
             name="category"
-            placeholder="Aisle / category (optional)"
+            placeholder={t("shopping.categoryOptionalPlaceholder")}
             autoComplete="off"
           />
           <DialogFooter>
             <Button type="submit" disabled={isPending} className="w-full">
               {isPending && <Loader2 className="animate-spin" />}
-              Add item
+              {t("shopping.addItem")}
             </Button>
           </DialogFooter>
         </form>

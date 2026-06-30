@@ -5,6 +5,7 @@ import { ArrowDown, ArrowUp, Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Workout } from "@/lib/activity/queries";
 import { createWorkout, updateWorkout } from "@/lib/activity/actions";
+import { useT } from "@/lib/i18n/provider";
 import {
   Dialog,
   DialogContent,
@@ -51,6 +52,7 @@ export function WorkoutDialog({
   const [rounds, setRounds] = useState(workout?.rounds ?? 1);
   const [steps, setSteps] = useState<StepDraft[]>(() => initialSteps(workout));
   const [isPending, startTransition] = useTransition();
+  const t = useT();
 
   const isEdit = Boolean(workout);
 
@@ -77,7 +79,7 @@ export function WorkoutDialog({
       ...prev,
       {
         key: uid(),
-        name: is_rest ? "Rest" : "",
+        name: is_rest ? t("activity.rest") : "",
         duration: is_rest ? 20 : 40,
         is_rest,
       },
@@ -108,7 +110,7 @@ export function WorkoutDialog({
         else await createWorkout(fd);
         onOpenChange(false);
       } catch {
-        toast.error("Couldn't save the workout, please try again.");
+        toast.error(t("activity.toast.saveWorkoutFailed"));
       }
     });
   }
@@ -117,23 +119,25 @@ export function WorkoutDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit workout" : "New workout"}</DialogTitle>
+          <DialogTitle>
+            {isEdit ? t("activity.editWorkout") : t("activity.newWorkout")}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="flex gap-3">
             <div className="flex-1 space-y-1.5">
-              <Label htmlFor="wk-name">Name</Label>
+              <Label htmlFor="wk-name">{t("activity.nameLabel")}</Label>
               <Input
                 id="wk-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Morning HIIT"
+                placeholder={t("activity.namePlaceholder")}
                 autoComplete="off"
               />
             </div>
             <div className="w-20 space-y-1.5">
-              <Label htmlFor="wk-rounds">Rounds</Label>
+              <Label htmlFor="wk-rounds">{t("activity.rounds")}</Label>
               <Input
                 id="wk-rounds"
                 type="number"
@@ -147,10 +151,13 @@ export function WorkoutDialog({
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Moves</Label>
+              <Label>{t("activity.moves")}</Label>
               <span className="text-xs text-muted-foreground tabular-nums">
-                {cleaned.length} moves · {Math.floor(totalSeconds / 60)}m{" "}
-                {totalSeconds % 60}s total
+                {t("activity.movesSummary", {
+                  count: cleaned.length,
+                  minutes: Math.floor(totalSeconds / 60),
+                  seconds: totalSeconds % 60,
+                })}
               </span>
             </div>
 
@@ -168,7 +175,7 @@ export function WorkoutDialog({
                       type="button"
                       onClick={() => move(s.key, -1)}
                       disabled={i === 0}
-                      aria-label="Move up"
+                      aria-label={t("activity.moveUp")}
                       className="text-muted-foreground hover:text-foreground disabled:opacity-30"
                     >
                       <ArrowUp className="size-3.5" />
@@ -177,7 +184,7 @@ export function WorkoutDialog({
                       type="button"
                       onClick={() => move(s.key, 1)}
                       disabled={i === steps.length - 1}
-                      aria-label="Move down"
+                      aria-label={t("activity.moveDown")}
                       className="text-muted-foreground hover:text-foreground disabled:opacity-30"
                     >
                       <ArrowDown className="size-3.5" />
@@ -186,7 +193,7 @@ export function WorkoutDialog({
                   <Input
                     value={s.name}
                     onChange={(e) => patch(s.key, { name: e.target.value })}
-                    placeholder={s.is_rest ? "Rest" : "Exercise"}
+                    placeholder={s.is_rest ? t("activity.rest") : t("activity.exercise")}
                     autoComplete="off"
                     className="flex-1"
                   />
@@ -199,7 +206,7 @@ export function WorkoutDialog({
                       onChange={(e) =>
                         patch(s.key, { duration: Number(e.target.value) || 1 })
                       }
-                      aria-label="Seconds"
+                      aria-label={t("activity.seconds")}
                       className="w-16"
                     />
                     <span className="text-xs text-muted-foreground">s</span>
@@ -214,12 +221,12 @@ export function WorkoutDialog({
                         : "bg-muted text-muted-foreground hover:text-foreground",
                     )}
                   >
-                    {s.is_rest ? "Rest" : "Move"}
+                    {s.is_rest ? t("activity.rest") : t("activity.move")}
                   </button>
                   <button
                     type="button"
                     onClick={() => remove(s.key)}
-                    aria-label="Remove move"
+                    aria-label={t("activity.removeMove")}
                     className="text-muted-foreground hover:text-destructive"
                   >
                     <Trash2 className="size-4" />
@@ -236,7 +243,7 @@ export function WorkoutDialog({
                 onClick={() => addStep(false)}
               >
                 <Plus />
-                Move
+                {t("activity.move")}
               </Button>
               <Button
                 type="button"
@@ -245,7 +252,7 @@ export function WorkoutDialog({
                 onClick={() => addStep(true)}
               >
                 <Plus />
-                Rest
+                {t("activity.rest")}
               </Button>
             </div>
           </div>
@@ -258,7 +265,7 @@ export function WorkoutDialog({
             disabled={isPending || !name.trim()}
           >
             {isPending && <Loader2 className="animate-spin" />}
-            {isEdit ? "Save" : "Create"}
+            {isEdit ? t("activity.save") : t("activity.create")}
           </Button>
         </DialogFooter>
       </DialogContent>

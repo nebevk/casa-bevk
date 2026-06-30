@@ -9,6 +9,7 @@ import {
   addMedicalContact,
   updateMedicalContact,
 } from "@/lib/medical/actions";
+import { useT } from "@/lib/i18n/provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,12 +25,12 @@ import {
 import { cn } from "@/lib/utils";
 
 const KINDS = [
-  ["gp", "GP"],
-  ["dentist", "Dentist"],
-  ["pediatrician", "Pediatrician"],
-  ["gynecologist", "Gynecologist"],
-  ["specialist", "Specialist"],
-  ["other", "Other"],
+  ["gp", "records.kind.gp"],
+  ["dentist", "records.kind.dentist"],
+  ["pediatrician", "records.kind.pediatrician"],
+  ["gynecologist", "records.kind.gynecologist"],
+  ["specialist", "records.kind.specialist"],
+  ["other", "records.kind.other"],
 ] as const;
 
 export function MedicalContactDialog({
@@ -45,6 +46,7 @@ export function MedicalContactDialog({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
+  const t = useT();
   const isEdit = Boolean(contact?.id);
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = open ?? internalOpen;
@@ -67,7 +69,7 @@ export function MedicalContactDialog({
           await updateMedicalContact(contact.id, formData);
         else await addMedicalContact(formData);
       } catch {
-        toast.error("Couldn't save, please try again.");
+        toast.error(t("records.toast.saveFailed"));
       }
     });
   }
@@ -78,28 +80,28 @@ export function MedicalContactDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-heading">
-            {isEdit ? "Edit contact" : "Add doctor / dentist"}
+            {isEdit ? t("records.contactDialog.editTitle") : t("records.contactDialog.addTitle")}
           </DialogTitle>
           <DialogDescription>
-            A doctor, dentist, or other medical contact.
+            {t("records.contactDialog.desc")}
           </DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-3">
           <div className="flex flex-wrap gap-1.5">
             {KINDS.map(([value, label]) => (
               <Chip key={value} active={kind === value} onClick={() => setKind(value)}>
-                {label}
+                {t(label)}
               </Chip>
             ))}
           </div>
 
-          <Field name="name" label="Name" required placeholder="dr. Novak" defaultValue={contact?.name ?? ""} />
+          <Field name="name" label={t("records.field.name")} required placeholder="dr. Novak" defaultValue={contact?.name ?? ""} />
 
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">For</Label>
+            <Label className="text-xs text-muted-foreground">{t("records.for")}</Label>
             <div className="flex flex-wrap gap-1.5">
               <Chip active={member === "both"} onClick={() => setMember("both")}>
-                Both
+                {t("records.both")}
               </Chip>
               {members.map((m) => (
                 <Chip key={m.id} active={member === m.id} onClick={() => setMember(m.id)}>
@@ -109,16 +111,16 @@ export function MedicalContactDialog({
             </div>
           </div>
 
-          <Field name="clinic" label="Clinic / ZD" placeholder="ZD Radovljica" defaultValue={contact?.clinic ?? ""} />
+          <Field name="clinic" label={t("records.field.clinic")} placeholder="ZD Radovljica" defaultValue={contact?.clinic ?? ""} />
           <div className="grid grid-cols-2 gap-2">
-            <Field name="phone" label="Phone" placeholder="04 …" defaultValue={contact?.phone ?? ""} />
-            <Field name="email" label="Email" defaultValue={contact?.email ?? ""} />
+            <Field name="phone" label={t("records.field.phone")} placeholder="04 …" defaultValue={contact?.phone ?? ""} />
+            <Field name="email" label={t("records.field.email")} defaultValue={contact?.email ?? ""} />
           </div>
-          <Field name="address" label="Address" defaultValue={contact?.address ?? ""} />
+          <Field name="address" label={t("records.field.address")} defaultValue={contact?.address ?? ""} />
 
           <div className="space-y-1.5">
             <Label htmlFor="mc-notes" className="text-xs text-muted-foreground">
-              Notes
+              {t("records.field.notes")}
             </Label>
             <textarea
               id="mc-notes"
@@ -132,7 +134,7 @@ export function MedicalContactDialog({
           <DialogFooter>
             <Button type="submit" disabled={isPending}>
               {isPending && <Loader2 className="animate-spin" />}
-              {isEdit ? "Save" : "Add"}
+              {isEdit ? t("records.save") : t("records.add")}
             </Button>
           </DialogFooter>
         </form>

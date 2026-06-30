@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getHouseholdId, getUser } from "@/lib/auth/dal";
+import { parseMoney } from "@/lib/format";
 import { ensureCategoryId } from "./categories";
 
 async function authedContext() {
@@ -18,8 +19,8 @@ function str(value: FormDataEntryValue | null): string | null {
 }
 
 export async function addExpense(formData: FormData) {
-  const amount = Number(formData.get("amount"));
-  if (!Number.isFinite(amount) || amount <= 0) return;
+  const amount = parseMoney(formData.get("amount") as string | null);
+  if (amount == null || amount <= 0) return;
 
   const categoryName = String(formData.get("category") ?? "").trim();
   const paidByRaw = String(formData.get("paid_by") ?? "");
@@ -63,43 +64,49 @@ export async function deleteExpense(id: string) {
 export async function setBudget(
   categoryName: string,
   periodMonth: string,
-  amount: number,
+  amountInput: number | string,
   memberId: string | null = null,
 ) {
-  if (!Number.isFinite(amount) || amount < 0) return;
+  const amount = parseMoney(amountInput);
+  if (amount == null || amount < 0) throw new Error("Invalid budget amount");
   const { household, supabase } = await authedContext();
   const category_id = await ensureCategoryId(supabase, household.id, categoryName);
 
-  // Fetch candidates and match the member in JS — member_id may not exist yet
-  // (migration 0003). Shared budgets work regardless; personal need 0003.
-  const { data: rows } = await supabase
-    .from("budgets")
-    .select("*")
-    .eq("household_id", household.id)
-    .eq("category_id", category_id)
-    .eq("period_month", periodMonth);
-  const existing = (rows ?? []).find(
-    (r) => ((r as { member_id?: string | null }).member_id ?? null) === memberId,
-  );
+  // Match the exact (household, category, month, member) row DB-side. member_id
+  // distinguishes shared (NULL) from personal budgets (migration 0003).
+  const findExisting = () => {
+    const q = supabase
+      .from("budgets")
+      .select("id")
+      .eq("household_id", household.id)
+      .eq("category_id", category_id)
+      .eq("period_month", periodMonth);
+    return (memberId ? q.eq("member_id", memberId) : q.is("member_id", null)).maybeSingle();
+  };
 
+  const { data: existing } = await findExisting();
   if (existing) {
-    await supabase.from("budgets").update({ amount }).eq("id", existing.id);
-  } else if (memberId) {
-    // personal budget — requires migration 0003 (budgets.member_id)
-    await supabase.from("budgets").insert({
+    const { error } = await supabase
+      .from("budgets")
+      .update({ amount })
+      .eq("id", existing.id);
+    if (error) throw error;
+  } else {
+    const { error } = await supabase.from("budgets").insert({
       household_id: household.id,
       category_id,
       period_month: periodMonth,
       amount,
       member_id: memberId,
-    } as never);
-  } else {
-    await supabase.from("budgets").insert({
-      household_id: household.id,
-      category_id,
-      period_month: periodMonth,
-      amount,
     });
+    // A concurrent save can win the race and hit the unique index — fold the
+    // duplicate into an update instead of surfacing a 23505.
+    if (error?.code === "23505") {
+      const { data: row } = await findExisting();
+      if (row) await supabase.from("budgets").update({ amount }).eq("id", row.id);
+    } else if (error) {
+      throw error;
+    }
   }
   revalidatePath("/budgets");
   revalidatePath("/finances");

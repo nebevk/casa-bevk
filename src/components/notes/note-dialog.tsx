@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useT } from "@/lib/i18n/provider";
 import { cn } from "@/lib/utils";
 
 export type EditableNote = {
@@ -38,6 +39,7 @@ export function NoteDialog({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
+  const t = useT();
   const isEdit = Boolean(note?.id);
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = open ?? internalOpen;
@@ -54,7 +56,7 @@ export function NoteDialog({
         if (isEdit && note) await updateNote(note.id, formData);
         else await addNote(formData);
       } catch {
-        toast.error("Couldn't save note, please try again.");
+        toast.error(t("notes.saveError"));
       }
     });
   }
@@ -65,33 +67,26 @@ export function NoteDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-heading">
-            {isEdit ? "Edit note" : "New note"}
+            {isEdit ? t("notes.editNote") : t("notes.newNote")}
           </DialogTitle>
-          <DialogDescription>
-            Shared notes are visible to both of you; personal notes only to you.
-          </DialogDescription>
+          <DialogDescription>{t("notes.dialogDesc")}</DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-3">
           <Input
             name="title"
-            placeholder="Title"
+            placeholder={t("notes.titlePlaceholder")}
             defaultValue={note?.title ?? ""}
             autoComplete="off"
           />
           <textarea
             name="body"
-            placeholder="Write a note…"
+            placeholder={t("notes.bodyPlaceholder")}
             defaultValue={note?.body ?? ""}
             rows={6}
             className="w-full resize-y rounded-lg border border-input bg-transparent px-3 py-2 text-base outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
           />
           <div className="flex gap-2">
-            {(
-              [
-                ["shared", "Shared"],
-                ["personal", "Personal"],
-              ] as const
-            ).map(([value, label]) => (
+            {(["shared", "personal"] as const).map((value) => (
               <button
                 key={value}
                 type="button"
@@ -103,7 +98,7 @@ export function NoteDialog({
                     : "border-border text-muted-foreground hover:bg-muted",
                 )}
               >
-                {label}
+                {t(`notes.${value}`)}
               </button>
             ))}
           </div>
@@ -112,7 +107,7 @@ export function NoteDialog({
             name="category"
             list="note-categories"
             defaultValue={note?.category ?? ""}
-            placeholder="Category (optional), e.g. Recipes, Ideas, Travel"
+            placeholder={t("notes.categoryPlaceholder")}
             autoComplete="off"
           />
           {categories.length > 0 && (
@@ -126,7 +121,7 @@ export function NoteDialog({
           <DialogFooter>
             <Button type="submit" disabled={isPending}>
               {isPending && <Loader2 className="animate-spin" />}
-              {isEdit ? "Save" : "Add note"}
+              {isEdit ? t("notes.save") : t("notes.addNote")}
             </Button>
           </DialogFooter>
         </form>

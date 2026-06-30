@@ -8,11 +8,13 @@ import { NoteDialog } from "./note-dialog";
 import { BooksArt, CozyEmpty } from "@/components/cozy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useT } from "@/lib/i18n/provider";
 import { cn } from "@/lib/utils";
 
 type Mutate = (fn: () => Promise<void> | void) => void;
 
 export function NotesView({ notes }: { notes: NoteRow[] }) {
+  const t = useT();
   const [query, setQuery] = useState("");
   const [visibility, setVisibility] = useState<"all" | "shared" | "personal">(
     "all",
@@ -47,10 +49,10 @@ export function NotesView({ notes }: { notes: NoteRow[] }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-heading text-2xl font-semibold tracking-tight">
-            Notes
+            {t("notes.title")}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Personal &amp; shared notes for the household.
+            {t("notes.subtitle")}
           </p>
         </div>
         <NoteDialog
@@ -58,7 +60,7 @@ export function NotesView({ notes }: { notes: NoteRow[] }) {
           trigger={
             <Button>
               <Plus />
-              New note
+              {t("notes.newNote")}
             </Button>
           }
         />
@@ -70,7 +72,7 @@ export function NotesView({ notes }: { notes: NoteRow[] }) {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search notes…"
+            placeholder={t("notes.searchPlaceholder")}
             className="pl-8"
           />
         </div>
@@ -81,13 +83,13 @@ export function NotesView({ notes }: { notes: NoteRow[] }) {
               type="button"
               onClick={() => setVisibility(f)}
               className={cn(
-                "rounded-full border px-3 py-1 text-sm capitalize transition-colors",
+                "rounded-full border px-3 py-1 text-sm transition-colors",
                 visibility === f
                   ? "border-primary bg-primary/10 text-foreground"
                   : "border-border text-muted-foreground hover:bg-muted",
               )}
             >
-              {f}
+              {t(`notes.filter.${f}`)}
             </button>
           ))}
         </div>
@@ -96,7 +98,7 @@ export function NotesView({ notes }: { notes: NoteRow[] }) {
       {categories.length > 0 && (
         <div className="flex flex-wrap gap-2">
           <CategoryChip active={category === null} onClick={() => setCategory(null)}>
-            All categories
+            {t("notes.allCategories")}
           </CategoryChip>
           {categories.map((c) => (
             <CategoryChip
@@ -113,8 +115,8 @@ export function NotesView({ notes }: { notes: NoteRow[] }) {
       {filtered.length === 0 ? (
         <CozyEmpty art={<BooksArt />}>
           {notes.length === 0
-            ? "No notes yet. Add one with “New note” or the button in the corner."
-            : "No notes match your filters."}
+            ? t("notes.emptyNone")
+            : t("notes.emptyFiltered")}
         </CozyEmpty>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -180,13 +182,16 @@ function NoteCard({
   onPickCategory: (c: string) => void;
   mutate: Mutate;
 }) {
+  const t = useT();
   return (
     <div
       onClick={onEdit}
       className="group relative flex cursor-pointer flex-col rounded-lg border border-border bg-card p-4 shadow-sm transition-colors hover:border-primary/40"
     >
       <div className="flex items-start justify-between gap-2">
-        <h3 className="line-clamp-1 font-medium">{note.title || "Untitled"}</h3>
+        <h3 className="line-clamp-1 font-medium">
+          {note.title || t("notes.untitled")}
+        </h3>
         <div
           className="flex items-center gap-1"
           onClick={(e) => e.stopPropagation()}
@@ -194,7 +199,7 @@ function NoteCard({
           <button
             type="button"
             onClick={() => mutate(() => togglePin(note.id, !note.is_pinned))}
-            aria-label={note.is_pinned ? "Unpin" : "Pin"}
+            aria-label={note.is_pinned ? t("notes.unpin") : t("notes.pin")}
             className={cn(
               "transition-colors hover:text-primary",
               note.is_pinned ? "text-primary" : "text-muted-foreground",
@@ -205,7 +210,7 @@ function NoteCard({
           <button
             type="button"
             onClick={() => mutate(() => deleteNote(note.id))}
-            aria-label="Delete note"
+            aria-label={t("notes.deleteNote")}
             className="reveal-hover -m-1 rounded-md p-1 text-muted-foreground hover:text-destructive"
           >
             <Trash2 className="size-4" />
@@ -226,7 +231,9 @@ function NoteCard({
               : "bg-muted text-muted-foreground",
           )}
         >
-          {note.visibility === "personal" ? "Personal" : "Shared"}
+          {note.visibility === "personal"
+            ? t("notes.personal")
+            : t("notes.shared")}
         </span>
         {note.category && (
           <button

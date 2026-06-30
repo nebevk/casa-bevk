@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import type { Member } from "@/lib/auth/dal";
 import type { SportProfile, Workout } from "@/lib/activity/queries";
 import { deleteSportProfile, deleteWorkout } from "@/lib/activity/actions";
+import { useT } from "@/lib/i18n/provider";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -62,13 +63,14 @@ export function ActivityView({
   const [editWorkout, setEditWorkout] = useState<Workout | "new" | null>(null);
   const [profileTarget, setProfileTarget] = useState<ProfileTarget | null>(null);
   const [, startTransition] = useTransition();
+  const t = useT();
 
   function removeWorkout(id: string) {
     startTransition(async () => {
       try {
         await deleteWorkout(id);
       } catch {
-        toast.error("Couldn't delete the workout.");
+        toast.error(t("activity.toast.deleteWorkoutFailed"));
       }
     });
   }
@@ -77,7 +79,7 @@ export function ActivityView({
       try {
         await deleteSportProfile(id);
       } catch {
-        toast.error("Couldn't remove the profile.");
+        toast.error(t("activity.toast.removeProfileFailed"));
       }
     });
   }
@@ -86,16 +88,16 @@ export function ActivityView({
     <div className="space-y-8">
       <div>
         <h1 className="font-heading text-2xl font-semibold tracking-tight">
-          Activity
+          {t("activity.title")}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Move together. Play a workout or check in on Strava.
+          {t("activity.subtitle")}
         </p>
       </div>
 
       {/* Strava */}
       <section className="space-y-3">
-        <h2 className="font-heading text-lg font-medium">Strava</h2>
+        <h2 className="font-heading text-lg font-medium">{t("activity.strava")}</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {members.map((m) => {
             const profile =
@@ -113,7 +115,9 @@ export function ActivityView({
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium">{m.name}</p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {profile ? (profile.label ?? "Strava profile") : "Not linked"}
+                    {profile
+                      ? (profile.label ?? t("activity.stravaProfile"))
+                      : t("activity.notLinked")}
                   </p>
                 </div>
                 {profile ? (
@@ -125,12 +129,12 @@ export function ActivityView({
                       className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-white"
                       style={{ backgroundColor: STRAVA }}
                     >
-                      Open
+                      {t("activity.open")}
                       <ExternalLink className="size-3.5" />
                     </a>
                     <button
                       type="button"
-                      aria-label="Edit Strava link"
+                      aria-label={t("activity.editStravaLink")}
                       onClick={() =>
                         setProfileTarget({
                           memberId: m.id,
@@ -144,7 +148,7 @@ export function ActivityView({
                     </button>
                     <button
                       type="button"
-                      aria-label="Remove Strava link"
+                      aria-label={t("activity.removeStravaLink")}
                       onClick={() => removeProfile(profile.id)}
                       className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                     >
@@ -164,7 +168,7 @@ export function ActivityView({
                     }
                   >
                     <Plus />
-                    Link
+                    {t("activity.link")}
                   </Button>
                 )}
               </div>
@@ -176,16 +180,18 @@ export function ActivityView({
       {/* Workouts */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="font-heading text-lg font-medium">Workouts</h2>
+          <h2 className="font-heading text-lg font-medium">
+            {t("activity.workouts")}
+          </h2>
           <Button size="sm" onClick={() => setEditWorkout("new")}>
             <Plus />
-            New workout
+            {t("activity.newWorkout")}
           </Button>
         </div>
 
         {workouts.length === 0 ? (
           <CozyEmpty art={<MugArt />} className="py-10">
-            No workouts yet. Build a timed circuit and press play.
+            {t("activity.emptyWorkouts")}
           </CozyEmpty>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -202,7 +208,9 @@ export function ActivityView({
                       <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                         <span className="inline-flex items-center gap-1">
                           <Dumbbell className="size-3.5" />
-                          {moves} {moves === 1 ? "move" : "moves"}
+                          {moves === 1
+                            ? t("activity.moveCount", { count: moves })
+                            : t("activity.movesCount", { count: moves })}
                         </span>
                         <span className="inline-flex items-center gap-1">
                           <Timer className="size-3.5" />
@@ -220,7 +228,7 @@ export function ActivityView({
                       <DropdownMenuTrigger asChild>
                         <button
                           type="button"
-                          aria-label="Workout menu"
+                          aria-label={t("activity.workoutMenu")}
                           className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
                         >
                           <MoreVertical className="size-4" />
@@ -229,7 +237,7 @@ export function ActivityView({
                       <DropdownMenuContent align="end" className="w-40">
                         <DropdownMenuItem onClick={() => setEditWorkout(w)}>
                           <Pencil className="size-4" />
-                          Edit
+                          {t("activity.edit")}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
@@ -237,7 +245,7 @@ export function ActivityView({
                           onClick={() => removeWorkout(w.id)}
                         >
                           <Trash2 className="size-4" />
-                          Delete
+                          {t("activity.delete")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -249,7 +257,7 @@ export function ActivityView({
                     disabled={w.steps.length === 0}
                   >
                     <Play className="fill-current" />
-                    Play
+                    {t("activity.play")}
                   </Button>
                 </div>
               );

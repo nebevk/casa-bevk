@@ -6,9 +6,10 @@ import type { CalendarEvent, Occurrence } from "@/lib/calendar/recurrence";
 import { expandEvents } from "@/lib/calendar/recurrence";
 import { EventDialog } from "./event-dialog";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n/provider";
 import { cn } from "@/lib/utils";
 
-const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 const pad = (n: number) => String(n).padStart(2, "0");
 const keyOf = (d: Date) =>
   `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -20,6 +21,7 @@ export function CalendarView({
   events: CalendarEvent[];
   holidays: Record<string, string>;
 }) {
+  const t = useT();
   const today = new Date();
   const [cursor, setCursor] = useState({
     y: today.getFullYear(),
@@ -85,17 +87,17 @@ export function CalendarView({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-heading text-2xl font-semibold tracking-tight">
-            Calendar
+            {t("calendar.title")}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Your shared family calendar.
+            {t("calendar.subtitle")}
           </p>
         </div>
         <EventDialog
           trigger={
             <Button>
               <Plus />
-              New event
+              {t("calendar.newEvent")}
             </Button>
           }
         />
@@ -107,7 +109,7 @@ export function CalendarView({
             type="button"
             onClick={() => shift(-1)}
             className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
-            aria-label="Previous month"
+            aria-label={t("calendar.previousMonth")}
           >
             <ChevronLeft className="size-4" />
           </button>
@@ -115,7 +117,7 @@ export function CalendarView({
             type="button"
             onClick={() => shift(1)}
             className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
-            aria-label="Next month"
+            aria-label={t("calendar.nextMonth")}
           >
             <ChevronRight className="size-4" />
           </button>
@@ -128,15 +130,15 @@ export function CalendarView({
             setCursor({ y: today.getFullYear(), m: today.getMonth() })
           }
         >
-          Today
+          {t("calendar.today")}
         </Button>
       </div>
 
       <div className="hidden overflow-hidden rounded-lg border border-border bg-card sm:block">
         <div className="grid grid-cols-7 border-b border-border bg-muted/40 text-center text-xs font-medium text-muted-foreground">
-          {WEEKDAYS.map((d) => (
+          {WEEKDAY_KEYS.map((d) => (
             <div key={d} className="py-2">
-              {d}
+              {t(`calendar.weekdays.${d}`)}
             </div>
           ))}
         </div>
@@ -193,7 +195,7 @@ export function CalendarView({
                   ))}
                   {dayOcc.length > 3 && (
                     <div className="px-1 text-[10px] text-muted-foreground">
-                      +{dayOcc.length - 3} more
+                      {t("calendar.moreCount", { count: dayOcc.length - 3 })}
                     </div>
                   )}
                 </div>
@@ -213,7 +215,7 @@ export function CalendarView({
           if (!hasAny)
             return (
               <p className="rounded-lg border border-dashed border-border/70 py-10 text-center text-sm text-muted-foreground">
-                Nothing planned this month. Use “New event” to add something.
+                {t("calendar.emptyMonth")}
               </p>
             );
           return monthDays.map((d) => {

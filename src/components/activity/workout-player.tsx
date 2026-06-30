@@ -10,6 +10,7 @@ import {
 } from "react";
 import { Check, Pause, Play, SkipBack, SkipForward, X } from "lucide-react";
 import type { Workout } from "@/lib/activity/queries";
+import { useT } from "@/lib/i18n/provider";
 import { cn } from "@/lib/utils";
 
 type Cue = {
@@ -34,11 +35,12 @@ export function WorkoutPlayer({
   workout: Workout;
   onClose: () => void;
 }) {
+  const t = useT();
   const cues = useMemo<Cue[]>(() => {
     const list: Cue[] = [];
     if (workout.steps.length === 0) return list;
     list.push({
-      name: "Get ready",
+      name: t("activity.getReady"),
       duration: PREP_SECONDS,
       is_rest: true,
       round: 0,
@@ -56,7 +58,7 @@ export function WorkoutPlayer({
       }
     }
     return list;
-  }, [workout]);
+  }, [workout, t]);
 
   const [idx, setIdxState] = useState(0);
   const [secondsLeft, setSecState] = useState(cues[0]?.duration ?? 0);
@@ -188,8 +190,8 @@ export function WorkoutPlayer({
   if (cues.length === 0) {
     return (
       <Shell rest>
-        <p className="text-lg">This workout has no moves yet.</p>
-        <PillButton onClick={onClose}>Close</PillButton>
+        <p className="text-lg">{t("activity.noMovesYet")}</p>
+        <PillButton onClick={onClose}>{t("activity.close")}</PillButton>
       </Shell>
     );
   }
@@ -200,15 +202,19 @@ export function WorkoutPlayer({
         <span className="flex size-20 items-center justify-center rounded-full bg-white/15">
           <Check className="size-10" />
         </span>
-        <h2 className="font-heading text-3xl font-semibold">Nice work!</h2>
+        <h2 className="font-heading text-3xl font-semibold">
+          {t("activity.niceWork")}
+        </h2>
         <p className="text-white/80">
-          {workout.name} · {fmt(totalSeconds)} · {workout.rounds}{" "}
-          {workout.rounds === 1 ? "round" : "rounds"}
+          {workout.name} · {fmt(totalSeconds)} ·{" "}
+          {workout.rounds === 1
+            ? t("activity.roundCount", { count: workout.rounds })
+            : t("activity.roundsCount", { count: workout.rounds })}
         </p>
         <div className="flex gap-3">
-          <PillButton onClick={restart}>Again</PillButton>
+          <PillButton onClick={restart}>{t("activity.again")}</PillButton>
           <PillButton onClick={onClose} solid>
-            Done
+            {t("activity.done")}
           </PillButton>
         </div>
       </Shell>
@@ -228,12 +234,15 @@ export function WorkoutPlayer({
         <span className="text-sm font-medium text-white/80">
           {cur.prep
             ? workout.name
-            : `Round ${cur.round} / ${workout.rounds}`}
+            : t("activity.roundProgress", {
+                round: cur.round,
+                total: workout.rounds,
+              })}
         </span>
         <button
           type="button"
           onClick={onClose}
-          aria-label="Stop workout"
+          aria-label={t("activity.stopWorkout")}
           className="inline-flex size-11 items-center justify-center rounded-full text-white/80 hover:bg-white/10 hover:text-white"
         >
           <X className="size-5" />
@@ -271,7 +280,7 @@ export function WorkoutPlayer({
           </span>
           {cur.is_rest && !cur.prep && (
             <span className="mt-1 text-sm uppercase tracking-widest text-white/70">
-              Rest
+              {t("activity.rest")}
             </span>
           )}
         </div>
@@ -282,7 +291,7 @@ export function WorkoutPlayer({
         {cur.name}
       </h2>
       <p className="-mt-2 h-5 text-sm text-white/70">
-        {next ? `Next: ${next.name}` : "Last move!"}
+        {next ? t("activity.next", { name: next.name }) : t("activity.lastMove")}
       </p>
 
       {/* controls */}
@@ -290,7 +299,7 @@ export function WorkoutPlayer({
         <button
           type="button"
           onClick={goPrev}
-          aria-label="Previous"
+          aria-label={t("activity.previous")}
           className="inline-flex size-12 items-center justify-center rounded-full text-white/80 hover:bg-white/10 hover:text-white"
         >
           <SkipBack className="size-6" />
@@ -298,7 +307,7 @@ export function WorkoutPlayer({
         <button
           type="button"
           onClick={() => setPaused((p) => !p)}
-          aria-label={paused ? "Resume" : "Pause"}
+          aria-label={paused ? t("activity.resume") : t("activity.pause")}
           className="inline-flex size-16 items-center justify-center rounded-full bg-white text-foreground shadow-lg active:translate-y-px"
         >
           {paused ? (
@@ -310,7 +319,7 @@ export function WorkoutPlayer({
         <button
           type="button"
           onClick={goNext}
-          aria-label="Skip"
+          aria-label={t("activity.skip")}
           className="inline-flex size-12 items-center justify-center rounded-full text-white/80 hover:bg-white/10 hover:text-white"
         >
           <SkipForward className="size-6" />

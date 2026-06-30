@@ -22,22 +22,23 @@ import {
   deleteMedicalContact,
 } from "@/lib/medical/actions";
 import { daysUntil, formatDate } from "@/lib/format";
+import { useT } from "@/lib/i18n/provider";
 import { MedicalContactDialog } from "./medical-contact-dialog";
 import { HealthReminderDialog } from "./health-reminder-dialog";
 import { BooksArt, CozyEmpty, PlantArt } from "@/components/cozy";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const KIND_LABEL: Record<string, string> = {
-  gp: "GP",
-  dentist: "Dentist",
-  pediatrician: "Pediatrician",
-  gynecologist: "Gynecologist",
-  specialist: "Specialist",
-  other: "Other",
-  checkup: "Checkup",
-  vaccination: "Vaccination",
-  screening: "Screening",
+const KIND_LABEL_KEY: Record<string, string> = {
+  gp: "records.kind.gp",
+  dentist: "records.kind.dentist",
+  pediatrician: "records.kind.pediatrician",
+  gynecologist: "records.kind.gynecologist",
+  specialist: "records.kind.specialist",
+  other: "records.kind.other",
+  checkup: "records.kind.checkup",
+  vaccination: "records.kind.vaccination",
+  screening: "records.kind.screening",
 };
 
 export function MedicalSection({
@@ -51,6 +52,7 @@ export function MedicalSection({
   members: Member[];
   currentUserId: string | null;
 }) {
+  const t = useT();
   const [editContact, setEditContact] = useState<MedicalContactRow | null>(null);
   const [editReminder, setEditReminder] = useState<HealthReminderRow | null>(
     null,
@@ -62,14 +64,16 @@ export function MedicalSection({
     [members],
   );
   const forWhom = (id: string | null) =>
-    id ? (memberName.get(id) ?? "—") : "Both";
+    id ? (memberName.get(id) ?? "—") : t("records.both");
+  const kindLabel = (kind: string) =>
+    KIND_LABEL_KEY[kind] ? t(KIND_LABEL_KEY[kind]) : kind;
 
   function mutate(fn: () => Promise<void>) {
     startTransition(async () => {
       try {
         await fn();
       } catch {
-        toast.error("Couldn't update, please try again.");
+        toast.error(t("records.toast.updateFailed"));
       }
     });
   }
@@ -87,9 +91,9 @@ export function MedicalSection({
             <Stethoscope className="size-5" />
           </span>
           <span>
-            <span className="block font-medium">Do zdravnika</span>
+            <span className="block font-medium">{t("records.doZdravnika")}</span>
             <span className="block text-xs text-muted-foreground">
-              Book appointments at dozdravnika.si
+              {t("records.doZdravnikaDesc")}
             </span>
           </span>
         </span>
@@ -98,21 +102,21 @@ export function MedicalSection({
 
       {/* Doctors & dentists */}
       <Section
-        title="Doctors & dentists"
+        title={t("records.doctorsDentists")}
         action={
           <MedicalContactDialog
             members={members}
             trigger={
               <Button variant="outline" size="sm">
                 <Plus />
-                Add
+                {t("records.add")}
               </Button>
             }
           />
         }
       >
         {contacts.length === 0 ? (
-          <Empty art={<BooksArt />} text="Add your doctors and dentists." />
+          <Empty art={<BooksArt />} text={t("records.emptyContacts")} />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             {contacts.map((c) => (
@@ -124,7 +128,7 @@ export function MedicalSection({
                   <div className="min-w-0">
                     <p className="truncate font-medium">{c.name}</p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {KIND_LABEL[c.kind] ?? c.kind} · {forWhom(c.member_id)}
+                      {kindLabel(c.kind)} · {forWhom(c.member_id)}
                       {c.clinic ? ` · ${c.clinic}` : ""}
                     </p>
                   </div>
@@ -133,7 +137,7 @@ export function MedicalSection({
                       type="button"
                       onClick={() => setEditContact(c)}
                       className="text-muted-foreground hover:text-foreground"
-                      aria-label="Edit"
+                      aria-label={t("records.edit")}
                     >
                       <Pencil className="size-4" />
                     </button>
@@ -141,7 +145,7 @@ export function MedicalSection({
                       type="button"
                       onClick={() => mutate(() => deleteMedicalContact(c.id))}
                       className="reveal-hover -m-1 rounded-md p-1 text-muted-foreground hover:text-destructive"
-                      aria-label="Delete"
+                      aria-label={t("records.delete")}
                     >
                       <Trash2 className="size-4" />
                     </button>
@@ -160,7 +164,7 @@ export function MedicalSection({
 
       {/* Health reminders */}
       <Section
-        title="Reminders"
+        title={t("records.reminders")}
         action={
           <HealthReminderDialog
             members={members}
@@ -168,14 +172,14 @@ export function MedicalSection({
             trigger={
               <Button variant="outline" size="sm">
                 <Plus />
-                Add
+                {t("records.add")}
               </Button>
             }
           />
         }
       >
         {reminders.length === 0 ? (
-          <Empty art={<PlantArt />} text="Add checkup & vaccination reminders." />
+          <Empty art={<PlantArt />} text={t("records.emptyReminders")} />
         ) : (
           <ul className="space-y-2">
             {reminders.map((r) => {
@@ -195,18 +199,18 @@ export function MedicalSection({
                       )
                     }
                     className="text-muted-foreground transition-colors hover:text-primary"
-                    aria-label="Mark done"
+                    aria-label={t("records.markDone")}
                   >
                     <CheckCircle2 className="size-5" />
                   </button>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{r.title}</p>
                     <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      {KIND_LABEL[r.kind] ?? r.kind} · {forWhom(r.member_id)}
+                      {kindLabel(r.kind)} · {forWhom(r.member_id)}
                       {r.interval_months ? (
                         <span className="inline-flex items-center gap-0.5">
                           <Repeat className="size-3" />
-                          {r.interval_months}m
+                          {t("records.monthsShort", { count: r.interval_months })}
                         </span>
                       ) : null}
                     </p>
@@ -228,7 +232,7 @@ export function MedicalSection({
                       type="button"
                       onClick={() => setEditReminder(r)}
                       className="text-muted-foreground hover:text-foreground"
-                      aria-label="Edit"
+                      aria-label={t("records.edit")}
                     >
                       <Pencil className="size-4" />
                     </button>
@@ -236,7 +240,7 @@ export function MedicalSection({
                       type="button"
                       onClick={() => mutate(() => deleteHealthReminder(r.id))}
                       className="reveal-hover -m-1 rounded-md p-1 text-muted-foreground hover:text-destructive"
-                      aria-label="Delete"
+                      aria-label={t("records.delete")}
                     >
                       <Trash2 className="size-4" />
                     </button>

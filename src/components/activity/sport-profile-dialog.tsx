@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { SportProfile } from "@/lib/activity/queries";
 import { saveSportProfile } from "@/lib/activity/actions";
+import { useT } from "@/lib/i18n/provider";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +33,7 @@ export function SportProfileDialog({
   const [url, setUrl] = useState(profile?.url ?? "");
   const [label, setLabel] = useState(profile?.label ?? "");
   const [isPending, startTransition] = useTransition();
+  const t = useT();
 
   function submit() {
     if (!url.trim()) return;
@@ -45,7 +47,7 @@ export function SportProfileDialog({
         await saveSportProfile(fd);
         onOpenChange(false);
       } catch {
-        toast.error("Couldn't save, please try again.");
+        toast.error(t("activity.toast.saveProfileFailed"));
       }
     });
   }
@@ -61,7 +63,7 @@ export function SportProfileDialog({
 
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="sp-url">Profile link</Label>
+            <Label htmlFor="sp-url">{t("activity.profileLink")}</Label>
             <Input
               id="sp-url"
               value={url}
@@ -71,16 +73,16 @@ export function SportProfileDialog({
               inputMode="url"
             />
             <p className="text-xs text-muted-foreground">
-              Open your Strava profile, copy the page link, and paste it here.
+              {t("activity.profileLinkHint")}
             </p>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="sp-label">Label (optional)</Label>
+            <Label htmlFor="sp-label">{t("activity.labelOptional")}</Label>
             <Input
               id="sp-label"
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              placeholder="@handle or a short name"
+              placeholder={t("activity.labelPlaceholder")}
               autoComplete="off"
             />
           </div>
@@ -93,7 +95,7 @@ export function SportProfileDialog({
             disabled={isPending || !url.trim()}
           >
             {isPending && <Loader2 className="animate-spin" />}
-            Save
+            {t("activity.save")}
           </Button>
         </DialogFooter>
       </DialogContent>

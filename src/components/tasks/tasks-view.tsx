@@ -37,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CozyEmpty, PlantArt } from "@/components/cozy";
+import { useT } from "@/lib/i18n/provider";
 import { cn } from "@/lib/utils";
 
 const initials = (name: string) => name.trim().slice(0, 2).toUpperCase();
@@ -48,10 +49,10 @@ const formatDue = (due: string) =>
   });
 
 type Status = "todo" | "in_progress" | "done";
-const COLUMNS: { key: Status; label: string }[] = [
-  { key: "todo", label: "To do" },
-  { key: "in_progress", label: "In progress" },
-  { key: "done", label: "Done" },
+const COLUMNS: { key: Status }[] = [
+  { key: "todo" },
+  { key: "in_progress" },
+  { key: "done" },
 ];
 
 type OptimisticAction =
@@ -111,6 +112,7 @@ export function TasksView({
   members: Member[];
   currentUserId: string | null;
 }) {
+  const t = useT();
   const [filter, setFilter] = useState<string>("all");
   const [showArchived, setShowArchived] = useState(false);
   const [dragOver, setDragOver] = useState<Status | null>(null);
@@ -130,7 +132,7 @@ export function TasksView({
       try {
         await mutate();
       } catch {
-        toast.error("Couldn't save, please try again.");
+        toast.error(t("tasks.saveError"));
       }
     });
   }
@@ -145,9 +147,7 @@ export function TasksView({
   function handleClearArchived(count: number) {
     if (
       typeof window !== "undefined" &&
-      !window.confirm(
-        `Clear all ${count} archived ${count === 1 ? "task" : "tasks"}? This removes them from the list.`,
-      )
+      !window.confirm(t("tasks.clearArchivedConfirm", { count }))
     )
       return;
     run({ kind: "clearArchived" }, () => clearArchivedTasks());
@@ -164,9 +164,9 @@ export function TasksView({
   const archivedTasks = filtered.filter((t) => t.archived);
 
   const filterChips = [
-    { key: "all", label: "All" },
+    { key: "all", label: t("tasks.filterAll") },
     ...members.map((m) => ({ key: m.id, label: m.name })),
-    { key: "unassigned", label: "Anyone" },
+    { key: "unassigned", label: t("tasks.filterAnyone") },
   ];
 
   function handleAdd(formData: FormData) {
@@ -203,11 +203,10 @@ export function TasksView({
     <div className="space-y-6">
       <div>
         <h1 className="font-heading text-2xl font-semibold tracking-tight">
-          To-Do
+          {t("tasks.title")}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Tap a card&rsquo;s menu to move it between columns (or drag on a
-          computer).
+          {t("tasks.subtitle")}
         </p>
       </div>
 
@@ -219,23 +218,23 @@ export function TasksView({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Input
             name="title"
-            placeholder="Add a task…"
+            placeholder={t("tasks.addPlaceholder")}
             required
             autoComplete="off"
             className="flex-1"
           />
-          <Input name="due" type="date" aria-label="Due date" className="sm:w-40" />
+          <Input name="due" type="date" aria-label={t("tasks.dueDate")} className="sm:w-40" />
           <Button type="submit" disabled={isPending}>
             {isPending ? <Loader2 className="animate-spin" /> : <Plus />}
-            Add
+            {t("tasks.add")}
           </Button>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <span className="text-xs text-muted-foreground">Assign to</span>
+          <span className="text-xs text-muted-foreground">{t("tasks.assignTo")}</span>
           <RadioChip
             name="assignee_id"
             value="none"
-            label="Anyone"
+            label={t("tasks.anyone")}
             defaultChecked={!currentUserId}
           />
           {members.map((m) => (
@@ -249,9 +248,9 @@ export function TasksView({
           ))}
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <span className="text-xs text-muted-foreground">Visibility</span>
-          <RadioChip name="visibility" value="shared" label="Shared" defaultChecked />
-          <RadioChip name="visibility" value="personal" label="Personal" />
+          <span className="text-xs text-muted-foreground">{t("tasks.visibility")}</span>
+          <RadioChip name="visibility" value="shared" label={t("tasks.shared")} defaultChecked />
+          <RadioChip name="visibility" value="personal" label={t("tasks.personal")} />
         </div>
       </form>
 
@@ -299,7 +298,7 @@ export function TasksView({
               )}
             >
               <div className="flex items-center justify-between px-2 py-1.5">
-                <span className="text-sm font-medium">{col.label}</span>
+                <span className="text-sm font-medium">{t(`tasks.columns.${col.key}`)}</span>
                 <div className="flex items-center gap-1.5">
                   {col.key === "done" && colTasks.length > 0 && (
                     <button
@@ -308,8 +307,8 @@ export function TasksView({
                         run({ kind: "archiveDone" }, () => archiveDoneTasks())
                       }
                       className="-m-1 inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
-                      aria-label="Archive all done"
-                      title="Archive all done"
+                      aria-label={t("tasks.archiveAllDone")}
+                      title={t("tasks.archiveAllDone")}
                     >
                       <Archive className="size-3.5" />
                     </button>
@@ -323,11 +322,11 @@ export function TasksView({
                 {colTasks.length === 0 ? (
                   col.key === "todo" ? (
                     <CozyEmpty art={<PlantArt />} className="py-8">
-                      All caught up.
+                      {t("tasks.allCaughtUp")}
                     </CozyEmpty>
                   ) : (
                     <p className="rounded-lg border border-dashed border-border/70 py-6 text-center text-xs text-muted-foreground/70">
-                      Nothing here yet
+                      {t("tasks.nothingHere")}
                     </p>
                   )
                 ) : (
@@ -362,7 +361,9 @@ export function TasksView({
               className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <Archive className="size-4" />
-              {showArchived ? "Hide" : "Show"} archived ({archivedTasks.length})
+              {showArchived
+                ? t("tasks.hideArchived", { count: archivedTasks.length })
+                : t("tasks.showArchived", { count: archivedTasks.length })}
             </button>
             {showArchived && (
               <button
@@ -370,7 +371,7 @@ export function TasksView({
                 onClick={() => handleClearArchived(archivedTasks.length)}
                 className="text-xs text-muted-foreground transition-colors hover:text-destructive"
               >
-                Clear all
+                {t("tasks.clearAll")}
               </button>
             )}
           </div>
@@ -392,8 +393,8 @@ export function TasksView({
                       )
                     }
                     className="inline-flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                    aria-label="Restore"
-                    title="Restore"
+                    aria-label={t("tasks.restore")}
+                    title={t("tasks.restore")}
                   >
                     <ArchiveRestore className="size-4" />
                   </button>
@@ -405,8 +406,8 @@ export function TasksView({
                       )
                     }
                     className="inline-flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                    aria-label="Delete"
-                    title="Delete"
+                    aria-label={t("tasks.delete")}
+                    title={t("tasks.delete")}
                   >
                     <Trash2 className="size-4" />
                   </button>
@@ -416,7 +417,7 @@ export function TasksView({
           )}
           {showArchived && (
             <p className="text-xs text-muted-foreground/80">
-              Tasks done over 30 days ago are archived automatically.
+              {t("tasks.autoArchiveNote")}
             </p>
           )}
         </div>
@@ -467,6 +468,7 @@ function TaskCard({
   run: (action: OptimisticAction, mutate: () => Promise<void>) => void;
   moveTo: (task: TaskRow, status: Status) => void;
 }) {
+  const t = useT();
   const isDone = task.status === "done";
   const isPersonal = task.visibility === "personal";
   const canPrivatize = task.owner_id != null && task.owner_id === currentUserId;
@@ -494,25 +496,25 @@ function TaskCard({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              aria-label="Task menu"
+              aria-label={t("tasks.taskMenu")}
               className="reveal-hover -m-2 inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
             >
               <MoreVertical className="size-4" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuLabel>Move to</DropdownMenuLabel>
+            <DropdownMenuLabel>{t("tasks.moveTo")}</DropdownMenuLabel>
             {COLUMNS.map((c) => (
               <DropdownMenuItem
                 key={c.key}
                 disabled={task.status === c.key}
                 onClick={() => moveTo(task, c.key)}
               >
-                {c.label}
+                {t(`tasks.columns.${c.key}`)}
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
-            <DropdownMenuLabel>Assign to</DropdownMenuLabel>
+            <DropdownMenuLabel>{t("tasks.assignTo")}</DropdownMenuLabel>
             <DropdownMenuItem
               onClick={() =>
                 run({ kind: "assign", id: task.id, assignee_id: null }, () =>
@@ -520,7 +522,7 @@ function TaskCard({
                 )
               }
             >
-              Anyone
+              {t("tasks.anyone")}
             </DropdownMenuItem>
             {members.map((m) => (
               <DropdownMenuItem
@@ -553,7 +555,7 @@ function TaskCard({
                     )
                   }
                 >
-                  {isPersonal ? "Make shared" : "Make personal"}
+                  {isPersonal ? t("tasks.makeShared") : t("tasks.makePersonal")}
                 </DropdownMenuItem>
               </>
             )}
@@ -563,7 +565,7 @@ function TaskCard({
                 run({ kind: "archive", id: task.id }, () => archiveTask(task.id))
               }
             >
-              Archive
+              {t("tasks.archive")}
             </DropdownMenuItem>
             <DropdownMenuItem
               variant="destructive"
@@ -571,7 +573,7 @@ function TaskCard({
                 run({ kind: "delete", id: task.id }, () => deleteTask(task.id))
               }
             >
-              Delete
+              {t("tasks.delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -592,10 +594,10 @@ function TaskCard({
         {isPersonal && (
           <span
             className="inline-flex items-center gap-1 text-xs text-primary"
-            title="Personal: only you can see this"
+            title={t("tasks.personalHint")}
           >
             <Lock className="size-3" />
-            Personal
+            {t("tasks.personal")}
           </span>
         )}
         <span className="flex-1" />

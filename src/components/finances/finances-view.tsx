@@ -9,6 +9,7 @@ import type { MonthInfo } from "@/lib/expenses/month";
 import { deleteExpense, setBudget } from "@/lib/expenses/actions";
 import { ExpenseDialog } from "@/components/expenses/expense-dialog";
 import { formatDate, formatMoney } from "@/lib/format";
+import { useT } from "@/lib/i18n/provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -46,11 +47,12 @@ export function FinancesView({
   memberName: Record<string, string>;
   currentUserId: string | null;
 }) {
+  const t = useT();
   const totalBudget = budgetRows.reduce((s, r) => s + r.budget, 0);
   const totalSpent = budgetRows.reduce((s, r) => s + r.spent, 0);
   const diff = totalBudget - totalSpent;
 
-  const scopes = [{ id: null as string | null, label: "Shared" }].concat(
+  const scopes = [{ id: null as string | null, label: t("finances.shared") }].concat(
     members.map((m) => ({ id: m.id as string | null, label: m.name })),
   );
 
@@ -59,10 +61,10 @@ export function FinancesView({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-heading text-2xl font-semibold tracking-tight">
-            Finances
+            {t("finances.title")}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Budget vs spending, by month.
+            {t("finances.subtitle")}
           </p>
         </div>
         <ExpenseDialog
@@ -72,7 +74,7 @@ export function FinancesView({
           trigger={
             <Button>
               <Plus />
-              Add expense
+              {t("finances.addExpense")}
             </Button>
           }
         />
@@ -99,7 +101,7 @@ export function FinancesView({
         <Link
           href={hrefFor(month.prevKey, selectedMember)}
           className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-          aria-label="Previous month"
+          aria-label={t("finances.previousMonth")}
         >
           <ChevronLeft className="size-4" />
         </Link>
@@ -109,7 +111,7 @@ export function FinancesView({
             <span className="font-semibold text-foreground tabular-nums">
               {formatMoney(totalSpent)}
             </span>{" "}
-            of {formatMoney(totalBudget)}
+            {t("finances.of")} {formatMoney(totalBudget)}
           </p>
           {totalBudget > 0 && (
             <p
@@ -119,15 +121,15 @@ export function FinancesView({
               )}
             >
               {diff < 0
-                ? `${formatMoney(Math.abs(diff))} over`
-                : `${formatMoney(diff)} saved`}
+                ? t("finances.amountOver", { amount: formatMoney(Math.abs(diff)) })
+                : t("finances.amountSaved", { amount: formatMoney(diff) })}
             </p>
           )}
         </div>
         <Link
           href={hrefFor(month.nextKey, selectedMember)}
           className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-          aria-label="Next month"
+          aria-label={t("finances.nextMonth")}
         >
           <ChevronRight className="size-4" />
         </Link>
@@ -135,10 +137,10 @@ export function FinancesView({
 
       <Card>
         <CardHeader>
-          <CardTitle className="font-heading text-lg">Plan vs spending</CardTitle>
-          <CardDescription>
-            Set a monthly plan per category; see what’s left or over.
-          </CardDescription>
+          <CardTitle className="font-heading text-lg">
+            {t("finances.planVsSpending")}
+          </CardTitle>
+          <CardDescription>{t("finances.planVsSpendingDesc")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
           {budgetRows.map((row) => (
@@ -154,16 +156,20 @@ export function FinancesView({
 
       <Card>
         <CardHeader>
-          <CardTitle className="font-heading text-lg">Expenses</CardTitle>
+          <CardTitle className="font-heading text-lg">
+            {t("finances.expenses")}
+          </CardTitle>
           <CardDescription>
-            {expenses.length} this month
-            {selectedMember ? ` · paid by ${memberName[selectedMember]}` : ""}
+            {t("finances.expensesThisMonth", { count: expenses.length })}
+            {selectedMember
+              ? ` · ${t("finances.paidByName", { name: memberName[selectedMember] })}`
+              : ""}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {expenses.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              No expenses yet. Add one or use the quick button in the corner.
+              {t("finances.noExpenses")}
             </p>
           ) : (
             <div className="space-y-2">
@@ -192,6 +198,7 @@ function BudgetRow({
   periodMonth: string;
   memberId: string | null;
 }) {
+  const t = useT();
   const [value, setValue] = useState(row.budget ? String(row.budget) : "");
   const [, startTransition] = useTransition();
   const pct = row.budget > 0 ? Math.min(100, (row.spent / row.budget) * 100) : 0;
@@ -229,9 +236,9 @@ function BudgetRow({
               type="number"
               min="0"
               step="1"
-              placeholder="Plan"
+              placeholder={t("finances.plan")}
               className="h-9 w-24 pl-5 text-base md:text-sm"
-              aria-label={`Plan for ${row.name}`}
+              aria-label={t("finances.planFor", { name: row.name })}
             />
           </div>
         </div>
@@ -254,8 +261,8 @@ function BudgetRow({
             )}
           >
             {over
-              ? `${formatMoney(Math.abs(remaining))} over`
-              : `${formatMoney(remaining)} left`}
+              ? t("finances.amountOver", { amount: formatMoney(Math.abs(remaining)) })
+              : t("finances.amountLeft", { amount: formatMoney(remaining) })}
           </p>
         </>
       )}
@@ -272,14 +279,15 @@ function ExpenseItem({
   categoryName: Record<string, string>;
   memberName: Record<string, string>;
 }) {
+  const t = useT();
   const [, startTransition] = useTransition();
   return (
     <div className="group flex items-center gap-3 rounded-lg border border-border px-3 py-2.5">
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">
           {expense.category_id
-            ? (categoryName[expense.category_id] ?? "Drugo")
-            : "Nerazporejeno"}
+            ? (categoryName[expense.category_id] ?? t("finances.otherCategory"))
+            : t("finances.uncategorized")}
           {expense.description ? (
             <span className="font-normal text-muted-foreground">
               {" "}
@@ -299,7 +307,7 @@ function ExpenseItem({
         type="button"
         onClick={() => startTransition(() => deleteExpense(expense.id))}
         className="shrink-0 reveal-hover -m-1 rounded-md p-1 text-muted-foreground hover:text-destructive"
-        aria-label="Delete expense"
+        aria-label={t("finances.deleteExpense")}
       >
         <Trash2 className="size-4" />
       </button>

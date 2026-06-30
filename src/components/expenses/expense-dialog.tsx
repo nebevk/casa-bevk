@@ -7,6 +7,7 @@ import type { Member } from "@/lib/auth/dal";
 import { addExpense } from "@/lib/expenses/actions";
 import { DEFAULT_EXPENSE_CATEGORIES } from "@/lib/expenses/constants";
 import { todayDateInput } from "@/lib/format";
+import { useT } from "@/lib/i18n/provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,6 +37,7 @@ export function ExpenseDialog({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
+  const t = useT();
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = open ?? internalOpen;
   const setOpen = onOpenChange ?? setInternalOpen;
@@ -57,7 +59,7 @@ export function ExpenseDialog({
       try {
         await addExpense(formData);
       } catch {
-        toast.error("Couldn't add expense, please try again.");
+        toast.error(t("finances.addExpenseError"));
       }
     });
   }
@@ -67,14 +69,14 @@ export function ExpenseDialog({
       {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-heading">Add expense</DialogTitle>
-          <DialogDescription>
-            Jot down a purchase. Amount and a category is enough.
-          </DialogDescription>
+          <DialogTitle className="font-heading">
+            {t("finances.addExpense")}
+          </DialogTitle>
+          <DialogDescription>{t("finances.addExpenseDesc")}</DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="exp-amount">Amount</Label>
+            <Label htmlFor="exp-amount">{t("finances.amount")}</Label>
             <div className="relative">
               <span className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground">
                 €
@@ -95,7 +97,9 @@ export function ExpenseDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Category</Label>
+            <Label className="text-xs text-muted-foreground">
+              {t("finances.category")}
+            </Label>
             <div className="flex flex-wrap gap-1.5">
               {allCategories.map((c) => (
                 <Chip key={c} active={category === c} onClick={() => setCategory(c)}>
@@ -107,7 +111,9 @@ export function ExpenseDialog({
 
           {members.length > 0 && (
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Paid by</Label>
+              <Label className="text-xs text-muted-foreground">
+                {t("finances.paidBy")}
+              </Label>
               <div className="flex flex-wrap gap-1.5">
                 <Chip active={paidBy === "none"} onClick={() => setPaidBy("none")}>
                   —
@@ -128,7 +134,7 @@ export function ExpenseDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="exp-date" className="text-xs text-muted-foreground">
-                Date
+                {t("finances.date")}
               </Label>
               <Input
                 id="exp-date"
@@ -139,12 +145,12 @@ export function ExpenseDialog({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="exp-note" className="text-xs text-muted-foreground">
-                Note
+                {t("finances.note")}
               </Label>
               <Input
                 id="exp-note"
                 name="description"
-                placeholder="optional"
+                placeholder={t("finances.optional")}
                 autoComplete="off"
               />
             </div>
@@ -153,7 +159,7 @@ export function ExpenseDialog({
           <DialogFooter>
             <Button type="submit" disabled={isPending} className="w-full">
               {isPending && <Loader2 className="animate-spin" />}
-              Add expense
+              {t("finances.addExpense")}
             </Button>
           </DialogFooter>
         </form>

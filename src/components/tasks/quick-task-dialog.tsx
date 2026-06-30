@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useT } from "@/lib/i18n/provider";
 import { cn } from "@/lib/utils";
 
 export function QuickTaskDialog({
@@ -29,6 +30,7 @@ export function QuickTaskDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const t = useT();
   const [assignee, setAssignee] = useState(currentUserId ?? "none");
   const [visibility, setVisibility] = useState<"shared" | "personal">("shared");
   const [isPending, startTransition] = useTransition();
@@ -43,7 +45,7 @@ export function QuickTaskDialog({
       try {
         await addTask(formData);
       } catch {
-        toast.error("Couldn't add task, please try again.");
+        toast.error(t("tasks.addError"));
       }
     });
   }
@@ -52,28 +54,28 @@ export function QuickTaskDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-heading">New task</DialogTitle>
+          <DialogTitle className="font-heading">{t("tasks.newTask")}</DialogTitle>
           <DialogDescription>
-            A to-do, shared with the household or just for you.
+            {t("tasks.newTaskDesc")}
           </DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="qt-title">Task</Label>
+            <Label htmlFor="qt-title">{t("tasks.taskLabel")}</Label>
             <Input
               id="qt-title"
               name="title"
-              placeholder="What needs doing?"
+              placeholder={t("tasks.taskPlaceholder")}
               required
               autoFocus
               autoComplete="off"
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Assign to</Label>
+            <Label className="text-xs text-muted-foreground">{t("tasks.assignTo")}</Label>
             <div className="flex flex-wrap gap-1.5">
               <Chip active={assignee === "none"} onClick={() => setAssignee("none")}>
-                Anyone
+                {t("tasks.anyone")}
               </Chip>
               {members.map((m) => (
                 <Chip
@@ -87,26 +89,26 @@ export function QuickTaskDialog({
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Visibility</Label>
+            <Label className="text-xs text-muted-foreground">{t("tasks.visibility")}</Label>
             <div className="flex flex-wrap gap-1.5">
               <Chip
                 active={visibility === "shared"}
                 onClick={() => setVisibility("shared")}
               >
-                Shared
+                {t("tasks.shared")}
               </Chip>
               <Chip
                 active={visibility === "personal"}
                 onClick={() => setVisibility("personal")}
               >
-                Personal
+                {t("tasks.personal")}
               </Chip>
             </div>
           </div>
           <DialogFooter>
             <Button type="submit" disabled={isPending} className="w-full">
               {isPending && <Loader2 className="animate-spin" />}
-              Add task
+              {t("tasks.addTask")}
             </Button>
           </DialogFooter>
         </form>

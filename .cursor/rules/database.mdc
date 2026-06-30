@@ -13,7 +13,7 @@ Source of truth: `supabase/migrations/`. Postgres + RLS is the **entire** securi
 model for this private two-user app.
 
 **Remote project:** `casa-bevk` — ref `bqahklmyziowboicwwjj` (eu-central-1). Schema
-applied through `0007_task_archive` (`0008_storage_rls`, `0009_activity` pending);
+applied through `0009_activity` (`0008_storage_rls`, `0010_user_locale` pending);
 types in `src/lib/supabase/database.types.ts`.
 
 ## Applying migrations (Supabase MCP)
@@ -54,7 +54,9 @@ types in `src/lib/supabase/database.types.ts`.
 
 ## Tables (current)
 
-- **Identity:** profiles, households, household_members, household_settings, user_settings
+- **Identity:** profiles, households, household_members, household_settings,
+  user_settings (per-user `theme`, `notif_push`, and `locale` en/sl in `0010` for
+  the bilingual UI)
 - **Lists:** todo_lists, tasks (personal/shared via `visibility` + `owner_id`,
   owner-only RLS + `guard_tasks_update` in `0005`; kanban `status`
   todo/in_progress/done in `0006`, kept in sync with `is_done`; archive via

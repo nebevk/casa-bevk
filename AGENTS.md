@@ -39,5 +39,12 @@ Cursor agents (which apply migrations via the Supabase MCP) stay in sync:
 `.cursor/rules/database.mdc`, `docs/SUPABASE.md`, and regenerate
 `src/lib/supabase/database.types.ts` (`pnpm db:types`).
 
+**Bilingual (EN/SL) — every feature.** The UI ships in English **and**
+Slovenian, chosen per user in Settings (`user_settings.locale`, `sl` default,
+`en` fallback). For any new user-facing text: add the string to BOTH
+`src/lib/i18n/dictionaries/en.ts` and `sl.ts` under the feature namespace, and
+render it via `useT()` (client, `@/lib/i18n/provider`) or `getT()` (server,
+`@/lib/i18n/server`). Never hardcode user-facing English in a component.
+
 Roadmap: `TODO.md`. Design/setup docs: `docs/`.
 

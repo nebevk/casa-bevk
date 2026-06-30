@@ -34,6 +34,7 @@ import type {
   MedicalContactRow,
 } from "@/lib/medical/queries";
 import { daysUntil, formatDate, formatMoney } from "@/lib/format";
+import { useT } from "@/lib/i18n/provider";
 import { AssetDialog } from "./asset-dialog";
 import { ProviderDialog } from "./provider-dialog";
 import { AssetDetailSheet } from "./asset-detail-sheet";
@@ -57,10 +58,10 @@ const PROVIDER_ICON: Record<string, LucideIcon> = {
   other: Box,
 };
 
-const TABS: { key: Tab; label: string; icon: LucideIcon }[] = [
-  { key: "cars", label: "Cars", icon: Car },
-  { key: "home", label: "Home", icon: Home },
-  { key: "medical", label: "Medical", icon: Stethoscope },
+const TABS: { key: Tab; labelKey: string; icon: LucideIcon }[] = [
+  { key: "cars", labelKey: "records.tabs.cars", icon: Car },
+  { key: "home", labelKey: "records.tabs.home", icon: Home },
+  { key: "medical", labelKey: "records.tabs.medical", icon: Stethoscope },
 ];
 
 const attrStr = (a: Record<string, unknown>, k: string) => {
@@ -90,6 +91,7 @@ export function RecordsView({
   members: Member[];
   currentUserId: string | null;
 }) {
+  const t = useT();
   const [tab, setTab] = useState<Tab>("cars");
   const [openAsset, setOpenAsset] = useState<AssetRow | null>(null);
   const [editProvider, setEditProvider] = useState<ProviderRow | null>(null);
@@ -100,7 +102,7 @@ export function RecordsView({
       try {
         await fn();
       } catch {
-        toast.error("Couldn't update, please try again.");
+        toast.error(t("records.toast.updateFailed"));
       }
     });
   }
@@ -127,30 +129,30 @@ export function RecordsView({
     <div className="space-y-6">
       <div>
         <h1 className="font-heading text-2xl font-semibold tracking-tight">
-          Records
+          {t("records.title")}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Cars, the home, and medical. Info, logs &amp; reminders in one place.
+          {t("records.subtitle")}
         </p>
       </div>
 
       <div className="flex gap-2">
-        {TABS.map((t) => {
-          const Icon = t.icon;
+        {TABS.map((tabItem) => {
+          const Icon = tabItem.icon;
           return (
             <button
-              key={t.key}
+              key={tabItem.key}
               type="button"
-              onClick={() => setTab(t.key)}
+              onClick={() => setTab(tabItem.key)}
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition-colors",
-                tab === t.key
+                tab === tabItem.key
                   ? "border-primary bg-primary/10 text-foreground"
                   : "border-border text-muted-foreground hover:bg-muted",
               )}
             >
               <Icon className="size-4" />
-              {t.label}
+              {t(tabItem.labelKey)}
             </button>
           );
         })}
@@ -165,13 +167,13 @@ export function RecordsView({
               trigger={
                 <Button>
                   <Plus />
-                  Add car
+                  {t("records.addCar")}
                 </Button>
               }
             />
           </div>
           {cars.length === 0 ? (
-            <EmptyState art={<PlantArt />} text="No cars yet. Add your first vehicle." />
+            <EmptyState art={<PlantArt />} text={t("records.emptyCars")} />
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
               {cars.map((car) => {
@@ -196,7 +198,7 @@ export function RecordsView({
                           mutate(() => deleteAsset(car.id));
                         }}
                         className="reveal-hover -m-1 rounded-md p-1 text-muted-foreground hover:text-destructive"
-                        aria-label="Delete car"
+                        aria-label={t("records.deleteCar")}
                       >
                         <Trash2 className="size-4" />
                       </button>
@@ -208,19 +210,19 @@ export function RecordsView({
                       </p>
                     )}
                     <div className="mt-3 flex flex-wrap gap-1.5">
-                      <DateChip label="Reg" days={reg} />
+                      <DateChip label={t("records.regShort")} days={reg} />
                       <DateChip
                         label={
                           attrStr(car.attributes, "insurance_company")
-                            ? `Ins · ${attrStr(car.attributes, "insurance_company")}`
-                            : "Ins"
+                            ? `${t("records.insShort")} · ${attrStr(car.attributes, "insurance_company")}`
+                            : t("records.insShort")
                         }
                         days={ins}
                       />
                     </div>
                     <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Wrench className="size-3.5" />
-                      {list.length} {list.length === 1 ? "entry" : "entries"}
+                      {t("records.entryCount", { count: list.length })}
                       {total > 0 ? ` · ${formatMoney(total)}` : ""}
                     </div>
                   </div>
@@ -236,21 +238,21 @@ export function RecordsView({
         <div className="space-y-6">
           {/* Apartment / property */}
           <Section
-            title="Home"
+            title={t("records.home")}
             action={
               <AssetDialog
                 defaultType="property"
                 trigger={
                   <Button variant="outline" size="sm">
                     <Plus />
-                    Add
+                    {t("records.add")}
                   </Button>
                 }
               />
             }
           >
             {homeAssets.length === 0 ? (
-              <EmptyState art={<PlantArt />} text="Add your apartment or house." />
+              <EmptyState art={<PlantArt />} text={t("records.emptyHome")} />
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {homeAssets.map((asset) => {
@@ -273,7 +275,7 @@ export function RecordsView({
                             mutate(() => deleteAsset(asset.id));
                           }}
                           className="reveal-hover -m-1 rounded-md p-1 text-muted-foreground hover:text-destructive"
-                          aria-label="Delete"
+                          aria-label={t("records.delete")}
                         >
                           <Trash2 className="size-4" />
                         </button>
@@ -286,7 +288,7 @@ export function RecordsView({
                       )}
                       <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
                         <Wrench className="size-3.5" />
-                        {list.length} {list.length === 1 ? "entry" : "entries"}
+                        {t("records.entryCount", { count: list.length })}
                         {total > 0 ? ` · ${formatMoney(total)}` : ""}
                       </div>
                     </div>
@@ -298,7 +300,7 @@ export function RecordsView({
 
           {/* Upcoming inspections */}
           {inspections.length > 0 && (
-            <Section title="Inspections due">
+            <Section title={t("records.inspectionsDue")}>
               <ul className="space-y-2">
                 {inspections.map((e) => {
                   const days = daysUntil(e.next_service_on);
@@ -338,13 +340,13 @@ export function RecordsView({
 
           {/* Providers */}
           <Section
-            title="Providers & contracts"
+            title={t("records.providersTitle")}
             action={
               <ProviderDialog
                 trigger={
                   <Button variant="outline" size="sm">
                     <Plus />
-                    Add
+                    {t("records.add")}
                   </Button>
                 }
               />
@@ -353,7 +355,7 @@ export function RecordsView({
             {providers.length === 0 ? (
               <EmptyState
                 art={<BooksArt />}
-                text="Internet, mobile, TV, electricity, gas, upravnik, komunala…"
+                text={t("records.emptyProviders")}
               />
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
@@ -384,7 +386,7 @@ export function RecordsView({
                             type="button"
                             onClick={() => setEditProvider(provider)}
                             className="text-muted-foreground hover:text-foreground"
-                            aria-label="Edit provider"
+                            aria-label={t("records.editProvider")}
                           >
                             <Pencil className="size-4" />
                           </button>
@@ -392,7 +394,7 @@ export function RecordsView({
                             type="button"
                             onClick={() => mutate(() => deleteProvider(provider.id))}
                             className="reveal-hover -m-1 rounded-md p-1 text-muted-foreground hover:text-destructive"
-                            aria-label="Delete provider"
+                            aria-label={t("records.deleteProvider")}
                           >
                             <Trash2 className="size-4" />
                           </button>
@@ -401,7 +403,7 @@ export function RecordsView({
                       <div className="mt-3 flex items-center justify-between text-sm">
                         <span className="font-medium">
                           {provider.monthly_cost != null
-                            ? `${formatMoney(provider.monthly_cost)}/mo`
+                            ? `${formatMoney(provider.monthly_cost)}${t("records.perMonthShort")}`
                             : "—"}
                         </span>
                         {provider.renewal_date && (
@@ -414,8 +416,10 @@ export function RecordsView({
                             )}
                           >
                             {days != null && days >= 0
-                              ? `Renews in ${days}d`
-                              : `Renewed ${formatDate(provider.renewal_date)}`}
+                              ? t("records.renewsIn", { count: days })
+                              : t("records.renewedOn", {
+                                  date: formatDate(provider.renewal_date),
+                                })}
                           </span>
                         )}
                       </div>
@@ -460,6 +464,7 @@ export function RecordsView({
 }
 
 function DateChip({ label, days }: { label: string; days: number | null }) {
+  const t = useT();
   if (days == null) {
     return (
       <span className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
@@ -480,7 +485,10 @@ function DateChip({ label, days }: { label: string; days: number | null }) {
             : "border-border text-muted-foreground",
       )}
     >
-      {label}: {overdue ? `${Math.abs(days)}d over` : `${days}d`}
+      {label}:{" "}
+      {overdue
+        ? t("records.daysOver", { count: Math.abs(days) })
+        : t("records.daysLeft", { count: days })}
     </span>
   );
 }

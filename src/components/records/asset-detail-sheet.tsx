@@ -9,6 +9,7 @@ import {
   deleteMaintenanceEntry,
 } from "@/lib/records/actions";
 import { daysUntil, formatDate, formatMoney } from "@/lib/format";
+import { useT } from "@/lib/i18n/provider";
 import {
   Sheet,
   SheetContent,
@@ -35,6 +36,7 @@ export function AssetDetailSheet({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const t = useT();
   const [isPending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -56,27 +58,27 @@ export function AssetDetailSheet({
       try {
         await addMaintenanceEntry(formData);
       } catch {
-        toast.error("Couldn't add entry, please try again.");
+        toast.error(t("records.toast.addEntryFailed"));
       }
     });
   }
 
   const specPairs: [string, unknown][] = isVehicle
     ? [
-        ["Engine", get("engine")],
-        ["Power", get("power")],
-        ["Gearbox", get("gearbox")],
-        ["Fuel", get("fuel")],
-        ["Year", get("year")],
-        ["Plate", get("plate")],
-        ["Engine code", get("engine_code")],
-        ["Current km", get("current_km") ? `${fmtNum(get("current_km"))} km` : null],
-        ["VIN", get("vin")],
+        [t("records.spec.engine"), get("engine")],
+        [t("records.spec.power"), get("power")],
+        [t("records.spec.gearbox"), get("gearbox")],
+        [t("records.spec.fuel"), get("fuel")],
+        [t("records.spec.year"), get("year")],
+        [t("records.spec.plate"), get("plate")],
+        [t("records.spec.engineCode"), get("engine_code")],
+        [t("records.spec.currentKm"), get("current_km") ? `${fmtNum(get("current_km"))} km` : null],
+        [t("records.spec.vin"), get("vin")],
       ]
     : asset?.type === "property"
       ? [
-          ["Address", get("address")],
-          ["Size", get("size_m2") ? `${get("size_m2")} m²` : null],
+          [t("records.spec.address"), get("address")],
+          [t("records.spec.size"), get("size_m2") ? `${get("size_m2")} m²` : null],
         ]
       : [];
   const spec = specPairs.filter(([, v]) => v != null && v !== "");
@@ -94,11 +96,11 @@ export function AssetDetailSheet({
           <div className="flex items-start justify-between gap-2">
             <div>
               <SheetTitle className="font-heading">
-                {asset?.name ?? "Record"}
+                {asset?.name ?? t("records.recordFallback")}
               </SheetTitle>
               <SheetDescription>
-                {entries.length} {entries.length === 1 ? "entry" : "entries"} ·
-                total {formatMoney(total)}
+                {t("records.entryCount", { count: entries.length })} ·{" "}
+                {t("records.totalLabel", { amount: formatMoney(total) })}
               </SheetDescription>
             </div>
             {asset && (
@@ -108,7 +110,7 @@ export function AssetDetailSheet({
                 onClick={() => setEditing(true)}
               >
                 <Pencil className="size-3.5" />
-                Edit
+                {t("records.edit")}
               </Button>
             )}
           </div>
@@ -123,14 +125,14 @@ export function AssetDetailSheet({
               <div className="grid grid-cols-2 gap-2">
                 {has("registration_due") && (
                   <KeyDate
-                    label="Registration"
+                    label={t("records.keyDate.registration")}
                     date={get("registration_due") as string}
                     days={regDays}
                   />
                 )}
                 {(has("insurance_due") || has("insurance_company")) && (
                   <KeyDate
-                    label={`Insurance${
+                    label={`${t("records.keyDate.insurance")}${
                       get("insurance_company")
                         ? ` · ${get("insurance_company")}`
                         : ""
@@ -139,7 +141,9 @@ export function AssetDetailSheet({
                     days={insDays}
                     sub={
                       get("insurance_amount") != null
-                        ? `${formatMoney(get("insurance_amount") as number)}/yr`
+                        ? t("records.perYear", {
+                            amount: formatMoney(get("insurance_amount") as number),
+                          })
                         : undefined
                     }
                   />
@@ -174,27 +178,29 @@ export function AssetDetailSheet({
             <Input
               name="title"
               placeholder={
-                isVehicle ? "What was done? (e.g. Mali servis)" : "Inspection / work"
+                isVehicle
+                  ? t("records.placeholder.serviceTitle")
+                  : t("records.placeholder.inspectionTitle")
               }
               required
               autoComplete="off"
             />
             <div className="grid grid-cols-2 gap-2">
-              <LabeledInput label="Date" name="performed_on" type="date" />
+              <LabeledInput label={t("records.entryField.date")} name="performed_on" type="date" />
               <LabeledInput
-                label="Next due"
+                label={t("records.entryField.nextDue")}
                 name="next_service_on"
                 type="date"
               />
               <LabeledInput
-                label="Cost €"
+                label={t("records.entryField.cost")}
                 name="cost"
                 type="number"
                 step="0.01"
               />
-              <LabeledInput label="Vendor" name="vendor" />
+              <LabeledInput label={t("records.entryField.vendor")} name="vendor" />
               {isVehicle && (
-                <LabeledInput label="Odometer km" name="odometer" type="number" />
+                <LabeledInput label={t("records.entryField.odometer")} name="odometer" type="number" />
               )}
             </div>
             <Button
@@ -204,13 +210,13 @@ export function AssetDetailSheet({
               className="w-full"
             >
               {isPending ? <Loader2 className="animate-spin" /> : <Plus />}
-              Add entry
+              {t("records.addEntry")}
             </Button>
           </form>
 
           {entries.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              No entries yet. Log a service or inspection above.
+              {t("records.emptyEntries")}
             </p>
           ) : (
             <ul className="space-y-2">
@@ -232,7 +238,9 @@ export function AssetDetailSheet({
                       {entry.next_service_on && (
                         <p className="mt-1 inline-flex items-center gap-1 text-xs text-primary">
                           <CalendarClock className="size-3" />
-                          Next: {formatDate(entry.next_service_on)}
+                          {t("records.nextPrefix", {
+                            date: formatDate(entry.next_service_on),
+                          })}
                         </p>
                       )}
                     </div>
@@ -249,12 +257,12 @@ export function AssetDetailSheet({
                             try {
                               await deleteMaintenanceEntry(entry.id);
                             } catch {
-                              toast.error("Couldn't delete, try again.");
+                              toast.error(t("records.toast.deleteFailed"));
                             }
                           })
                         }
                         className="reveal-hover -m-1 rounded-md p-1 text-muted-foreground hover:text-destructive"
-                        aria-label="Delete entry"
+                        aria-label={t("records.deleteEntry")}
                       >
                         <Trash2 className="size-4" />
                       </button>
@@ -285,6 +293,7 @@ function KeyDate({
   days: number | null;
   sub?: string;
 }) {
+  const t = useT();
   const soon = days != null && days >= 0 && days <= 30;
   const overdue = days != null && days < 0;
   return (
@@ -314,8 +323,8 @@ function KeyDate({
           (days == null
             ? ""
             : days < 0
-              ? `${Math.abs(days)}d overdue`
-              : `in ${days}d`)}
+              ? t("records.daysOverdue", { count: Math.abs(days) })
+              : t("records.inDays", { count: days }))}
       </p>
     </div>
   );
