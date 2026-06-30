@@ -1547,6 +1547,74 @@ export type Database = {
           },
         ]
       }
+      sport_profiles: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          household_id: string
+          id: string
+          label: string | null
+          member_id: string | null
+          platform: string
+          updated_at: string
+          updated_by: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          household_id: string
+          id?: string
+          label?: string | null
+          member_id?: string | null
+          platform?: string
+          updated_at?: string
+          updated_by?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          household_id?: string
+          id?: string
+          label?: string | null
+          member_id?: string | null
+          platform?: string
+          updated_at?: string
+          updated_by?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sport_profiles_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sport_profiles_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sport_profiles_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sport_profiles_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           archived_at: string | null
@@ -1747,6 +1815,115 @@ export type Database = {
             foreignKeyName: "user_settings_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workout_steps: {
+        Row: {
+          created_at: string
+          duration_seconds: number
+          household_id: string
+          id: string
+          is_rest: boolean
+          name: string
+          position: number
+          updated_at: string
+          workout_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number
+          household_id: string
+          id?: string
+          is_rest?: boolean
+          name: string
+          position?: number
+          updated_at?: string
+          workout_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number
+          household_id?: string
+          id?: string
+          is_rest?: boolean
+          name?: string
+          position?: number
+          updated_at?: string
+          workout_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_steps_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workout_steps_workout_fk"
+            columns: ["workout_id", "household_id"]
+            isOneToOne: false
+            referencedRelation: "workouts"
+            referencedColumns: ["id", "household_id"]
+          },
+        ]
+      }
+      workouts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          household_id: string
+          id: string
+          name: string
+          rounds: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          household_id: string
+          id?: string
+          name: string
+          rounds?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          household_id?: string
+          id?: string
+          name?: string
+          rounds?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workouts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workouts_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workouts_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
