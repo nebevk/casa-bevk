@@ -1788,6 +1788,7 @@ export type Database = {
       user_settings: {
         Row: {
           created_at: string
+          locale: string
           notif_email: boolean
           notif_push: boolean
           theme: string
@@ -1796,6 +1797,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          locale?: string
           notif_email?: boolean
           notif_push?: boolean
           theme?: string
@@ -1804,6 +1806,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          locale?: string
           notif_email?: boolean
           notif_push?: boolean
           theme?: string
