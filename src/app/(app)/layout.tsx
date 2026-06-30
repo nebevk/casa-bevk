@@ -9,24 +9,28 @@ import { AppSidebar } from "@/components/app-shell/app-sidebar";
 import { TopBar } from "@/components/app-shell/top-bar";
 import { RealtimeProvider } from "@/components/providers/realtime-provider";
 import { QuickAdd } from "@/components/quick-add";
+import { I18nProvider } from "@/lib/i18n/provider";
+import { getMessages } from "@/lib/i18n/server";
 
 export default async function AppLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  const [user, profile, members, categories] = await Promise.all([
+  const [user, profile, members, categories, i18n] = await Promise.all([
     requireUser(),
     getProfile(),
     getHouseholdMembers(),
     getExpenseCategories(),
+    getMessages(),
   ]);
   const name =
     (profile as { display_name?: string } | null)?.display_name ?? null;
 
   return (
-    <RealtimeProvider>
-      <div className="flex min-h-svh">
+    <I18nProvider locale={i18n.locale} messages={i18n.messages}>
+      <RealtimeProvider>
+        <div className="flex min-h-svh">
         <AppSidebar email={user.email ?? ""} name={name} />
         <div className="flex min-w-0 flex-1 flex-col">
           <TopBar email={user.email ?? ""} name={name} />
@@ -40,6 +44,7 @@ export default async function AppLayout({
         categories={categories.map((c) => c.name)}
         currentUserId={user.id}
       />
-    </RealtimeProvider>
+      </RealtimeProvider>
+    </I18nProvider>
   );
 }

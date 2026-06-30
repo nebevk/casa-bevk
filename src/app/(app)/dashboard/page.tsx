@@ -17,6 +17,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { getHouseholdMembers, getProfile } from "@/lib/auth/dal";
+import { getT } from "@/lib/i18n/server";
 import { getTasks } from "@/lib/tasks/queries";
 import { getNotes } from "@/lib/notes/queries";
 import { getShoppingItems } from "@/lib/shopping/queries";
@@ -43,11 +44,11 @@ export const metadata: Metadata = { title: "Dashboard" };
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-function greeting() {
+function greetingKey() {
   const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 18) return "Good afternoon";
-  return "Good evening";
+  if (h < 12) return "dashboard.morning";
+  if (h < 18) return "dashboard.afternoon";
+  return "dashboard.evening";
 }
 
 export default async function DashboardPage() {
@@ -77,6 +78,7 @@ export default async function DashboardPage() {
     getHealthReminders(),
   ]);
 
+  const { t } = await getT();
   const name = (profile as { display_name?: string } | null)?.display_name;
   const memberName = new Map(members.map((m) => [m.id, m.name] as const));
 
@@ -123,10 +125,10 @@ export default async function DashboardPage() {
     .slice(0, 6);
 
   const stats = [
-    { label: "Due today", value: dueToday.length, href: "/tasks", icon: CalendarClock },
-    { label: "Open tasks", value: openTasks.length, href: "/tasks", icon: ListTodo },
-    { label: "Shopping", value: openItems.length, href: "/shopping", icon: ShoppingCart },
-    { label: "Notes", value: notes.length, href: "/notes", icon: StickyNote },
+    { label: t("dashboard.statDueToday"), value: dueToday.length, href: "/tasks", icon: CalendarClock },
+    { label: t("dashboard.statOpenTasks"), value: openTasks.length, href: "/tasks", icon: ListTodo },
+    { label: t("dashboard.statShopping"), value: openItems.length, href: "/shopping", icon: ShoppingCart },
+    { label: t("dashboard.statNotes"), value: notes.length, href: "/notes", icon: StickyNote },
   ];
 
   return (
@@ -135,13 +137,13 @@ export default async function DashboardPage() {
         <div>
           <h1 className="flex items-center gap-2 font-heading text-2xl font-semibold tracking-tight md:text-3xl">
             <span>
-              {greeting()}
+              {t(greetingKey())}
               {name ? `, ${name}` : ""}
             </span>
             <Leaf className="size-6 shrink-0 text-primary" />
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Here’s your household at a glance.
+            {t("dashboard.glance")}
           </p>
         </div>
         <ShelfArt className="mt-1 hidden h-12 w-28 shrink-0 text-primary/25 sm:block" />
@@ -190,9 +192,9 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Panel title="Due today" description="Tasks due today or overdue.">
+        <Panel title={t("dashboard.dueToday")} description={t("dashboard.dueTodayDesc")}>
           {dueToday.length === 0 ? (
-            <Empty>Nothing due today. You’re all caught up.</Empty>
+            <Empty>{t("dashboard.nothingDueToday")}</Empty>
           ) : (
             <ul className="space-y-2.5">
               {dueToday.slice(0, 6).map((task) => (
@@ -212,9 +214,9 @@ export default async function DashboardPage() {
           )}
         </Panel>
 
-        <Panel title="Upcoming" description="Events in the next two weeks." icon={CalendarDays}>
+        <Panel title={t("dashboard.upcoming")} description={t("dashboard.upcomingDesc")} icon={CalendarDays}>
           {upcoming.length === 0 ? (
-            <Empty>Nothing on the calendar yet.</Empty>
+            <Empty>{t("dashboard.nothingCalendar")}</Empty>
           ) : (
             <ul className="space-y-2.5">
               {upcoming.map((o, i) => (
@@ -238,9 +240,9 @@ export default async function DashboardPage() {
           )}
         </Panel>
 
-        <Panel title="Due payments" description="Subscriptions coming up." icon={Repeat}>
+        <Panel title={t("dashboard.duePayments")} description={t("dashboard.duePaymentsDesc")} icon={Repeat}>
           {duePayments.length === 0 ? (
-            <Empty>No payments due soon.</Empty>
+            <Empty>{t("dashboard.noPaymentsSoon")}</Empty>
           ) : (
             <ul className="space-y-2.5">
               {duePayments.map((s) => {
@@ -263,12 +265,12 @@ export default async function DashboardPage() {
         </Panel>
 
         <Panel
-          title="Renewals & reminders"
-          description="Car, home & health, coming up."
+          title={t("dashboard.renewals")}
+          description={t("dashboard.renewalsDesc")}
           icon={CalendarClock}
         >
           {upcomingObligations.length === 0 ? (
-            <Empty>Nothing coming up.</Empty>
+            <Empty>{t("dashboard.nothingComingUp")}</Empty>
           ) : (
             <ul className="space-y-2.5">
               {upcomingObligations.map((o) => {
@@ -302,9 +304,9 @@ export default async function DashboardPage() {
           )}
         </Panel>
 
-        <Panel title="Recent notes" description="The latest notes you can see.">
+        <Panel title={t("dashboard.recentNotes")} description={t("dashboard.recentNotesDesc")}>
           {recentNotes.length === 0 ? (
-            <Empty>No notes yet.</Empty>
+            <Empty>{t("dashboard.noNotes")}</Empty>
           ) : (
             <ul className="space-y-2.5">
               {recentNotes.map((note) => (
@@ -313,7 +315,7 @@ export default async function DashboardPage() {
                     href="/notes"
                     className="line-clamp-1 font-medium hover:underline"
                   >
-                    {note.title || "Untitled"}
+                    {note.title || t("dashboard.untitled")}
                   </Link>
                   {note.body && (
                     <p className="line-clamp-1 text-xs text-muted-foreground">

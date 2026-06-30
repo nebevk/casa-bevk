@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ChevronsUpDown, LogOut, Settings } from "lucide-react";
 import { signOut } from "@/lib/auth/actions";
+import { useT } from "@/lib/i18n/provider";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +27,8 @@ export function UserMenu({
 }) {
   const initials = (name || email || "?").trim().slice(0, 2).toUpperCase();
   const isFull = variant === "full";
+  const t = useT();
+  const memberLabel = name || t("shell.member");
 
   return (
     <DropdownMenu>
@@ -42,7 +45,7 @@ export function UserMenu({
             </Avatar>
             <span className="flex min-w-0 flex-1 flex-col">
               <span className="truncate text-sm font-medium">
-                {name || "Member"}
+                {memberLabel}
               </span>
               <span className="truncate text-xs font-normal text-muted-foreground">
                 {email}
@@ -66,7 +69,7 @@ export function UserMenu({
         className="w-56"
       >
         <DropdownMenuLabel className="flex flex-col gap-0.5">
-          <span className="text-sm font-medium">{name || "Member"}</span>
+          <span className="text-sm font-medium">{memberLabel}</span>
           <span className="text-xs font-normal text-muted-foreground">
             {email}
           </span>
@@ -75,7 +78,7 @@ export function UserMenu({
         <DropdownMenuItem asChild>
           <Link href="/settings">
             <Settings className="size-4" />
-            Settings
+            {t("nav.settings")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -83,7 +86,7 @@ export function UserMenu({
           <DropdownMenuItem asChild>
             <button type="submit" className="w-full">
               <LogOut className="size-4" />
-              Sign out
+              {t("shell.signOut")}
             </button>
           </DropdownMenuItem>
         </form>

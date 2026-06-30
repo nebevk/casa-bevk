@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV_ITEMS, SETTINGS_ITEM, type NavItem } from "@/lib/constants";
+import { useT } from "@/lib/i18n/provider";
 import { cn } from "@/lib/utils";
 
 export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const t = useT();
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
 
@@ -25,7 +27,7 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
         )}
       >
         <Icon className="size-4 shrink-0" />
-        {item.label}
+        {t(`nav.${item.href.replace("/", "")}`)}
       </Link>
     );
   };

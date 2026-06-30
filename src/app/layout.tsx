@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Fraunces, Rochester } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { APP_DESCRIPTION, APP_NAME } from "@/lib/constants";
+import { getLocale } from "@/lib/i18n/server";
 
 const sans = Plus_Jakarta_Sans({
   variable: "--font-sans",
@@ -49,14 +50,15 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${sans.variable} ${heading.variable} ${brand.variable} h-full`}
       suppressHydrationWarning
     >

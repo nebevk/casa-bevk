@@ -11,6 +11,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Member } from "@/lib/auth/dal";
+import { useT } from "@/lib/i18n/provider";
 import { NoteDialog } from "@/components/notes/note-dialog";
 import { ExpenseDialog } from "@/components/expenses/expense-dialog";
 import { EventDialog } from "@/components/calendar/event-dialog";
@@ -35,6 +36,7 @@ export function QuickAdd({
 }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<QuickAction | null>(null);
+  const t = useT();
   const close = () => setActive(null);
   const pick = (a: QuickAction) => {
     setActive(a);
@@ -63,7 +65,7 @@ export function QuickAdd({
           actions.map((a) => (
             <Action
               key={a.key}
-              label={a.label}
+              label={t(`quickAdd.${a.key}`)}
               icon={a.icon}
               onClick={() => pick(a.key)}
             />
@@ -71,7 +73,7 @@ export function QuickAdd({
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          aria-label="Quick add"
+          aria-label={t("quickAdd.label")}
           aria-expanded={open}
           className="flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-1 ring-foreground/10 transition hover:bg-primary/90 active:translate-y-px"
         >

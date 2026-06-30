@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sheet";
 import { NavLinks } from "./nav-links";
 import { UserMenu } from "./user-menu";
+import { useT } from "@/lib/i18n/provider";
 
 export function TopBar({
   email,
@@ -21,6 +22,7 @@ export function TopBar({
   name?: string | null;
 }) {
   const [open, setOpen] = useState(false);
+  const t = useT();
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur md:hidden">
@@ -28,7 +30,7 @@ export function TopBar({
         <SheetTrigger asChild>
           <Button variant="ghost" size="icon" className="size-11 md:hidden">
             <Menu />
-            <span className="sr-only">Open menu</span>
+            <span className="sr-only">{t("shell.openMenu")}</span>
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-72 p-0">

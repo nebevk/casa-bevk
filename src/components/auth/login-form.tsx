@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { signIn, type AuthState } from "@/lib/auth/actions";
 import { HOUSEHOLD_MEMBERS } from "@/lib/constants";
+import { useT } from "@/lib/i18n/provider";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ export function LoginForm() {
   const [state, formAction, pending] = useActionState(signIn, initialState);
 
   const memberName = HOUSEHOLD_MEMBERS.find((m) => m.key === member)?.name;
+  const t = useT();
 
   function quickPick(memberKey: string) {
     setMember(memberKey);
@@ -64,25 +66,24 @@ export function LoginForm() {
 
       {member ? (
         <p className="text-sm text-muted-foreground">
-          Signing in as{" "}
-          <span className="font-medium text-foreground">{memberName}</span>.{" "}
+          {t("login.signingInAs", { name: memberName ?? "" })}{" "}
           <button
             type="button"
             onClick={() => setMember(null)}
             className="underline underline-offset-4 hover:text-foreground"
           >
-            Use a different email
+            {t("login.useDifferentEmail")}
           </button>
         </p>
       ) : (
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t("login.email")}</Label>
           <Input
             id="email"
             name="email"
             type="email"
             autoComplete="email"
-            placeholder="you@casabevk.home"
+            placeholder={t("login.emailPlaceholder")}
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required
@@ -92,7 +93,7 @@ export function LoginForm() {
 
       {mode === "password" && (
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">{t("login.password")}</Label>
           <Input
             id="password"
             name="password"
@@ -116,7 +117,7 @@ export function LoginForm() {
 
       <Button type="submit" size="lg" className="w-full" disabled={pending}>
         {pending && <Loader2 className="animate-spin" />}
-        {mode === "password" ? "Sign in" : "Email me a sign-in link"}
+        {mode === "password" ? t("login.signIn") : t("login.sendLink")}
       </Button>
 
       <button
@@ -125,8 +126,8 @@ export function LoginForm() {
         className="block w-full py-2 text-center text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
       >
         {mode === "password"
-          ? "Email me a magic link instead"
-          : "Use a password instead"}
+          ? t("login.useMagicLink")
+          : t("login.usePassword")}
       </button>
     </form>
   );

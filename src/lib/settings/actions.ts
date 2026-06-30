@@ -1,8 +1,24 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { getHouseholdId, getUser } from "@/lib/auth/dal";
+
+/** Per-user UI language. Upserts user_settings (the row may not exist yet). */
+export async function setLocale(formData: FormData) {
+  const user = await getUser();
+  if (!user) return;
+  const raw = String(formData.get("locale") ?? "");
+  const locale = raw === "en" || raw === "sl" ? raw : "sl";
+  // Untyped: `locale` arrives in migration 0010.
+  const supabase = (await createClient()) as unknown as SupabaseClient;
+  await supabase
+    .from("user_settings")
+    .upsert({ user_id: user.id, locale } as never, { onConflict: "user_id" });
+  // Re-render every route under the root layout in the new language.
+  revalidatePath("/", "layout");
+}
 
 export async function updateProfile(formData: FormData) {
   const user = await getUser();

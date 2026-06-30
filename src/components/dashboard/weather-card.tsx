@@ -12,20 +12,21 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Weather } from "@/lib/dashboard/weather";
+import { getT } from "@/lib/i18n/server";
 import { Card, CardContent } from "@/components/ui/card";
 
-function wmo(code: number): { Icon: LucideIcon; label: string } {
-  if (code === 0) return { Icon: Sun, label: "Clear" };
-  if (code === 1 || code === 2) return { Icon: CloudSun, label: "Partly cloudy" };
-  if (code === 3) return { Icon: Cloud, label: "Overcast" };
-  if (code === 45 || code === 48) return { Icon: CloudFog, label: "Fog" };
-  if (code >= 51 && code <= 57) return { Icon: CloudDrizzle, label: "Drizzle" };
+function wmo(code: number): { Icon: LucideIcon; key: string } {
+  if (code === 0) return { Icon: Sun, key: "clear" };
+  if (code === 1 || code === 2) return { Icon: CloudSun, key: "partlyCloudy" };
+  if (code === 3) return { Icon: Cloud, key: "overcast" };
+  if (code === 45 || code === 48) return { Icon: CloudFog, key: "fog" };
+  if (code >= 51 && code <= 57) return { Icon: CloudDrizzle, key: "drizzle" };
   if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82))
-    return { Icon: CloudRain, label: "Rain" };
+    return { Icon: CloudRain, key: "rain" };
   if ((code >= 71 && code <= 77) || code === 85 || code === 86)
-    return { Icon: CloudSnow, label: "Snow" };
-  if (code >= 95) return { Icon: CloudLightning, label: "Storm" };
-  return { Icon: Cloud, label: "Cloudy" };
+    return { Icon: CloudSnow, key: "snow" };
+  if (code >= 95) return { Icon: CloudLightning, key: "storm" };
+  return { Icon: Cloud, key: "cloudy" };
 }
 
 const dayLabel = (date: string) =>
@@ -40,8 +41,9 @@ const fmtTime = (iso: string) =>
       })
     : "—";
 
-export function WeatherCard({ weather }: { weather: Weather }) {
+export async function WeatherCard({ weather }: { weather: Weather }) {
   if (!weather) return null;
+  const { t } = await getT();
   const now = wmo(weather.current.code);
   const NowIcon = now.Icon;
 
@@ -55,7 +57,7 @@ export function WeatherCard({ weather }: { weather: Weather }) {
               {weather.current.temp}°
             </p>
             <p className="text-sm text-muted-foreground">
-              {now.label} · Radovljica
+              {t(`weather.${now.key}`)} · Radovljica
             </p>
             <p className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1">
