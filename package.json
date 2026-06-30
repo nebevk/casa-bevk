@@ -13,6 +13,7 @@
     "set:household-claim": "node scripts/set-household-claim.mjs",
     "seed:cars": "node scripts/seed-cars.mjs",
     "seed:providers": "node scripts/seed-providers.mjs",
+    "seed:activity": "node scripts/seed-activity.mjs",
     "deploy:vercel": "node scripts/deploy-vercel.mjs"
   },
   "dependencies": {
