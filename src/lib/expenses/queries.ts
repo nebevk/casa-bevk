@@ -34,6 +34,7 @@ export type BudgetRow = {
   amount: number;
   member_id: string | null;
 };
+export type BudgetRangeRow = BudgetRow & { period_month: string };
 
 export async function getExpenseCategories(): Promise<CategoryRow[]> {
   const user = await getUser();
@@ -105,6 +106,28 @@ export async function getExpensesInRange(
     .gte("occurred_on", startDate)
     .lt("occurred_on", nextDate);
   return data ?? [];
+}
+
+/** Budgets across a month range (inclusive), for plan-vs-actual coloring. */
+export async function getBudgetsForRange(
+  startMonth: string,
+  endMonth: string,
+): Promise<BudgetRangeRow[]> {
+  const user = await getUser();
+  if (!user) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("budgets")
+    .select("*")
+    .gte("period_month", startMonth)
+    .lte("period_month", endMonth);
+  return (data ?? []).map((b) => ({
+    id: b.id,
+    category_id: b.category_id,
+    amount: b.amount,
+    member_id: (b as { member_id?: string | null }).member_id ?? null,
+    period_month: (b as { period_month?: string }).period_month ?? "",
+  }));
 }
 
 /** Active recurring payments, for projecting fixed costs into the trend. */

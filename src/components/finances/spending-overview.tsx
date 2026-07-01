@@ -24,6 +24,18 @@ import { cn } from "@/lib/utils";
 const deltaTone = (delta: number) =>
   delta > 0 ? "text-destructive" : delta < 0 ? "text-primary" : "text-muted-foreground";
 
+// Compact whole-euro number for the dense matrix cells (symbol lives in the header).
+const num = (n: number) =>
+  new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
+
+// Over plan = caution, under plan = sage, no plan or empty = neutral.
+const cellTone = (amount: number, budget: number | null) =>
+  budget == null || budget <= 0 || amount <= 0
+    ? ""
+    : amount > budget
+      ? "text-destructive"
+      : "text-primary";
+
 function DeltaArrow({ delta }: { delta: number }) {
   const Icon = delta > 0 ? ArrowUpRight : delta < 0 ? ArrowDownRight : ArrowRight;
   return <Icon className="size-4 shrink-0" />;
@@ -31,7 +43,8 @@ function DeltaArrow({ delta }: { delta: number }) {
 
 export function SpendingOverview({ overview }: { overview: OverviewData }) {
   const t = useT();
-  const { trend, kpis, breakdown, movers, includesRecurring } = overview;
+  const { trend, kpis, breakdown, movers, matrix, includesRecurring } = overview;
+  const lastCol = matrix.months.length - 1;
   const hasAny = trend.some((p) => p.total > 0);
 
   const chartConfig = {
@@ -145,6 +158,89 @@ export function SpendingOverview({ overview }: { overview: OverviewData }) {
               )}
             </BarChart>
           </ChartContainer>
+        </CardContent>
+      </Card>
+
+      {/* Category x month matrix (mirrors the household budget sheet) */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-heading text-lg">
+            {t("finances.byCategoryByMonth")}
+          </CardTitle>
+          <CardDescription>
+            {t("finances.trendDesc", { count: matrix.months.length })}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {matrix.rows.length === 0 ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              {t("finances.overviewEmpty")}
+            </p>
+          ) : (
+            <div className="-mx-2 overflow-x-auto px-2">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-border text-muted-foreground">
+                    <th className="py-2 pr-3 text-left font-medium">€</th>
+                    {matrix.months.map((m, i) => (
+                      <th
+                        key={m.key}
+                        className={cn(
+                          "px-2 py-2 text-right font-medium tabular-nums",
+                          i === lastCol && "text-foreground",
+                        )}
+                      >
+                        {m.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {matrix.rows.map((row) => (
+                    <tr key={row.id ?? "uncat"} className="border-b border-border/50">
+                      <td className="py-1.5 pr-3 font-medium whitespace-nowrap">
+                        {row.name}
+                      </td>
+                      {row.cells.map((c, i) => (
+                        <td
+                          key={i}
+                          className={cn(
+                            "px-2 py-1.5 text-right tabular-nums",
+                            i === lastCol && "bg-muted/50",
+                            cellTone(c.amount, c.budget),
+                          )}
+                        >
+                          {c.amount > 0 ? (
+                            num(c.amount)
+                          ) : (
+                            <span className="text-muted-foreground/40">–</span>
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t-2 border-border font-semibold">
+                    <td className="py-2 pr-3 whitespace-nowrap">
+                      {t("finances.total")}
+                    </td>
+                    {matrix.columnTotals.map((tot, i) => (
+                      <td
+                        key={i}
+                        className={cn(
+                          "px-2 py-2 text-right tabular-nums",
+                          i === lastCol && "bg-muted/50",
+                        )}
+                      >
+                        {num(tot)}
+                      </td>
+                    ))}
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
 

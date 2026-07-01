@@ -299,7 +299,9 @@ export const sl = {
     "topMovers": "Največje spremembe",
     "topMoversDesc": "Največje spremembe glede na prejšnji mesec",
     "noMovers": "Ni opaznih sprememb glede na prejšnji mesec.",
-    "overviewEmpty": "Še ni dovolj podatkov. Dodaj nekaj stroškov za prikaz trendov."
+    "overviewEmpty": "Še ni dovolj podatkov. Dodaj nekaj stroškov za prikaz trendov.",
+    "byCategoryByMonth": "Po kategorijah po mesecih",
+    "total": "Skupaj"
   },
   subscriptions: {
     "title": "Naročnine",

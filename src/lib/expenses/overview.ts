@@ -34,6 +34,25 @@ export type Mover = {
   pct: number | null; // null when previous was 0
 };
 
+export type MatrixCell = {
+  amount: number;
+  budget: number | null; // monthly plan for this category, when set
+};
+
+export type MatrixRow = {
+  id: string | null;
+  name: string;
+  cells: MatrixCell[]; // one per month, oldest first
+  total: number;
+};
+
+export type CategoryMatrix = {
+  months: { key: string; label: string }[];
+  rows: MatrixRow[];
+  columnTotals: number[]; // logged spend per month
+  grandTotal: number;
+};
+
 export type OverviewData = {
   trend: TrendPoint[];
   currentLabel: string;
@@ -48,6 +67,7 @@ export type OverviewData = {
   };
   breakdown: CategorySlice[];
   movers: Mover[];
+  matrix: CategoryMatrix;
   includesRecurring: boolean;
   fixedMonthly: number;
 };
@@ -60,6 +80,8 @@ type BuildParams = {
   categoryName: Record<string, string>;
   uncategorizedLabel: string;
   otherLabel: string;
+  // monthKey ("YYYY-MM") -> categoryId -> plan amount, for the matrix coloring.
+  budgetsByMonth?: Record<string, Map<string, number>>;
   moversLimit?: number;
 };
 
@@ -84,6 +106,7 @@ export function buildOverview({
   categoryName,
   uncategorizedLabel,
   otherLabel,
+  budgetsByMonth = {},
   moversLimit = 5,
 }: BuildParams): OverviewData {
   const fixedMonthly = includeRecurring ? recurringMonthlyTotal(recurring) : 0;
@@ -168,12 +191,44 @@ export function buildOverview({
     .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
     .slice(0, moversLimit);
 
+  // Category x month matrix of LOGGED spend (mirrors the household budget sheet:
+  // category rows, month columns, a SKUPAJ total row, plan per cell for coloring).
+  const perMonthLogged = months.map((m) =>
+    loggedByCategory(expenses, m.startDate, m.nextDate),
+  );
+  const matrixIds = new Set<string | null>();
+  for (const m of perMonthLogged) for (const id of m.keys()) matrixIds.add(id);
+  for (const m of months) {
+    for (const id of budgetsByMonth[m.key]?.keys() ?? []) matrixIds.add(id);
+  }
+  const matrixRows: MatrixRow[] = [...matrixIds]
+    .map((id) => {
+      const cells: MatrixCell[] = months.map((m, i) => ({
+        amount: perMonthLogged[i].get(id) ?? 0,
+        budget: id == null ? null : (budgetsByMonth[m.key]?.get(id) ?? null),
+      }));
+      const total = cells.reduce((s, c) => s + c.amount, 0);
+      return { id, name: nameOf(id), cells, total };
+    })
+    .filter((r) => r.total > 0.005)
+    .sort((a, b) => b.total - a.total);
+  const columnTotals = months.map((_, i) =>
+    matrixRows.reduce((s, r) => s + r.cells[i].amount, 0),
+  );
+  const matrix: CategoryMatrix = {
+    months: months.map((m) => ({ key: m.key, label: m.label })),
+    rows: matrixRows,
+    columnTotals,
+    grandTotal: columnTotals.reduce((s, v) => s + v, 0),
+  };
+
   return {
     trend,
     currentLabel: focus?.label ?? "",
     kpis: { currentTotal, prevTotal, delta, pctChange, avg3, vsAvg3, monthsWithData },
     breakdown,
     movers,
+    matrix,
     includesRecurring: includeRecurring && fixedMonthly > 0,
     fixedMonthly,
   };

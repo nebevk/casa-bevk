@@ -301,7 +301,9 @@ export const en = {
     "topMovers": "Top movers",
     "topMoversDesc": "Biggest changes vs last month",
     "noMovers": "No notable changes vs last month.",
-    "overviewEmpty": "Not enough data yet. Add a few expenses to see trends."
+    "overviewEmpty": "Not enough data yet. Add a few expenses to see trends.",
+    "byCategoryByMonth": "By category, by month",
+    "total": "Total"
   },
   subscriptions: {
     "title": "Subscriptions",

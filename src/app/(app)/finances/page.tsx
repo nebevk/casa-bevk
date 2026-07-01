@@ -3,6 +3,7 @@ import { getHouseholdMembers, getUser } from "@/lib/auth/dal";
 import {
   getActiveRecurring,
   getBudgetsForMonth,
+  getBudgetsForRange,
   getExpenseCategories,
   getExpensesForMonth,
   getExpensesInRange,
@@ -78,8 +79,9 @@ export default async function FinancesPage({
   let overview: OverviewData | null = null;
   if (view === "overview") {
     const monthsRange = getMonthRange(info.key, TREND_MONTHS);
-    const [rangeExpenses, recurring, { t }] = await Promise.all([
+    const [rangeExpenses, rangeBudgets, recurring, { t }] = await Promise.all([
       getExpensesInRange(monthsRange[0].startDate, info.nextDate),
+      getBudgetsForRange(monthsRange[0].periodMonth, info.periodMonth),
       // Recurring costs are household-shared (no payer), so only fold them into
       // the unscoped (Shared) view to avoid mis-attributing them to one person.
       selectedMember ? Promise.resolve([]) : getActiveRecurring(),
@@ -88,6 +90,14 @@ export default async function FinancesPage({
     const scopedRange = selectedMember
       ? rangeExpenses.filter((e) => e.paid_by === selectedMember)
       : rangeExpenses;
+    // monthKey -> categoryId -> plan, scoped to the active member (shared = null).
+    const budgetsByMonth: Record<string, Map<string, number>> = {};
+    for (const b of rangeBudgets) {
+      if (!b.category_id) continue;
+      if ((b.member_id ?? null) !== selectedMember) continue;
+      const key = b.period_month.slice(0, 7);
+      (budgetsByMonth[key] ??= new Map()).set(b.category_id, b.amount);
+    }
     overview = buildOverview({
       months: monthsRange,
       expenses: scopedRange,
@@ -96,6 +106,7 @@ export default async function FinancesPage({
       categoryName,
       uncategorizedLabel: t("finances.uncategorized"),
       otherLabel: t("finances.otherCategory"),
+      budgetsByMonth,
     });
   }
 
